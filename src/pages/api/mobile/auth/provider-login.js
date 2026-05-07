@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { email, name, profileImage, provider, providerId } = req.body;
+  const { email, name, profileImage, provider, providerId, role = "consumer" } = req.body;
 
   if (!email || !provider || !providerId) {
     return res
@@ -18,20 +18,23 @@ export default async function handler(req, res) {
     const client = await clientPromise;
     const db = client.db("linkaro");
 
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Look up by email + role so the same email can hold separate consumer/provider accounts
     let user = await db
       .collection("users")
-      .findOne({ email: email.toLowerCase().trim() });
+      .findOne({ email: normalizedEmail, role });
 
-    // ── User does not exist → create ──────────────────────────────────────────
+    // ── User does not exist for this role → create ────────────────────────────
     if (!user) {
       const result = await db.collection("users").insertOne({
         name,
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         profileImage: profileImage ?? null,
         provider,
         providerId,
         emailVerified: true,
-        role: "consumer",
+        role,
         totalJobs: 0,
         phone: null,
         cnic: null,
@@ -43,22 +46,14 @@ export default async function handler(req, res) {
 
       user = {
         _id: result.insertedId,
-        email: email.toLowerCase().trim(),
-        role: "consumer",
+        email: normalizedEmail,
+        role,
         name,
         profileImage: profileImage ?? null,
       };
     }
 
-    // ── User exists with password account ─────────────────────────────────────
-    if (!user.provider) {
-      return res.status(409).json({
-        message:
-          "This email is registered with a password. Please login normally.",
-      });
-    }
-
-    // ── Return token ──────────────────────────────────────────────────────────
+    // ── Return token (log in regardless of how the account was originally created) ──
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
       process.env.SECRET_KEY,
