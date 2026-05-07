@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@font-face {
+  font-family: 'PP Mori';
+  src: url('/fonts/pp_mori/PPMori-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@font-face {
+  font-family: 'PP Mori';
+  src: url('/fonts/pp_mori/PPMori-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist/Geist-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist/Geist-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist/Geist-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist/Geist-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #000f2c;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+input::placeholder {
+  color: #808080;
+}
+
+input:focus {
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  .login-bg-panel {
+    display: none;
+  }
+}
+
+/* Sidebar search placeholder */
+.sidebar-search::placeholder {
+  color: #929292;
+}
+
+/* Sidebar nav scrollbar */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(254, 89, 0, 0.6);
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Desktop: hide floating mobile hamburger */
+@media (min-width: 769px) {
+  .mobile-hamburger {
+    display: none !important;
+  }
+}
+
+/* Mobile: sidebar overlays, strip hidden, content full width */
+@media (max-width: 768px) {
+  .sidebar-collapsed-strip {
+    display: none !important;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 99;
+  }
+
+  .dashboard-main {
+    margin-left: 0 !important;
+  }
+}
+
+.ticket-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 1.2vw, 18px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ticket-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
