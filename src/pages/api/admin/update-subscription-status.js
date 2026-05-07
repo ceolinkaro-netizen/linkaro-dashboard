@@ -29,18 +29,18 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: "Subscription not found" });
     }
 
-    await db
-      .collection("subscriptions")
-      .updateOne({ _id: new ObjectId(id) }, { $set: { status } });
-
-    const isBadge = (subscription.subscriptionType || "").toLowerCase().includes("badge");
-    const userStatusField = isBadge ? "badgeSubscriptionStatus" : "subscriptionStatus";
+    const isBadge = (subscription.subscriptionType || "")
+      .toLowerCase()
+      .includes("badge");
+    const userStatusField = isBadge
+      ? "badgeSubscriptionStatus"
+      : "subscriptionStatus";
 
     await db
       .collection("users")
       .updateOne(
         { _id: new ObjectId(subscription.userId) },
-        { $set: { [userStatusField]: status } }
+        { $set: { [userStatusField]: status } },
       );
 
     return res.status(200).json({ success: true, status });
