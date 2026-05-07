@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
     // ── User does not exist for this role → create ────────────────────────────
     if (!user) {
-      const result = await db.collection("users").insertOne({
+      const baseDoc = {
         name,
         email: normalizedEmail,
         profileImage: profileImage ?? null,
@@ -36,13 +36,28 @@ export default async function handler(req, res) {
         emailVerified: true,
         role,
         totalJobs: 0,
-        phone: null,
-        cnic: null,
-        address: null,
-        gender: null,
         password: null,
         createdAt: new Date(),
-      });
+      };
+
+      const roleDoc =
+        role === "provider"
+          ? {
+              phone: null,
+              address: { street: null, city: null, zip: null },
+              cnic: null,
+              gender: null,
+              category: null,
+              cnicFrontImage: null,
+              cnicBackImage: null,
+              subscriptionStatus: "inactive",
+              badgeSubscriptionStatus: "inactive",
+            }
+          : {
+              cnic: null,
+            };
+
+      const result = await db.collection("users").insertOne({ ...baseDoc, ...roleDoc });
 
       user = {
         _id: result.insertedId,
