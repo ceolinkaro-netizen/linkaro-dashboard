@@ -8,7 +8,7 @@ const PP_MORI = "'PP Mori', sans-serif";
 
 const navItems = [
   { label: "Dashboard", icon: "/dashboard-icon.svg", href: "/admin/dashboard" },
-  { label: "User Management", icon: "/user-icon.svg", href: "/user-management" },
+  { label: "User Management", icon: "/user-icon.svg", href: "/admin/user-management" },
   { label: "Job Post Management", icon: "/job-icon.svg", href: "/job-post-management" },
   { label: "Notifications", icon: "/notifcation-icon.svg", href: "/notifications" },
   { label: "Ticket Management", icon: "/ticket-icon.svg", href: "/ticket-management" },

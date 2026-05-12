@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { email, name, profileImage, provider, providerId, role = "consumer" } = req.body;
+  const { email, name, profileImage, provider, providerId, role } = req.body;
 
   if (!email || !provider || !providerId) {
     return res
@@ -57,7 +57,9 @@ export default async function handler(req, res) {
               cnic: null,
             };
 
-      const result = await db.collection("users").insertOne({ ...baseDoc, ...roleDoc });
+      const result = await db
+        .collection("users")
+        .insertOne({ ...baseDoc, ...roleDoc });
 
       user = {
         _id: result.insertedId,
