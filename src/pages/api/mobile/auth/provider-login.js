@@ -30,6 +30,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: false, newUser: true });
     }
 
+    // ── Registration pending check ────────────────────────────────────────────
+    if (user.role === "provider" && user.registrationStatus === false) {
+      return res.status(200).json({ success: false, registrationPending: true });
+    }
+
     // ── Return token ──────────────────────────────────────────────────────────
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
