@@ -25,52 +25,12 @@ export default async function handler(req, res) {
       .collection("users")
       .findOne({ email: normalizedEmail, role });
 
-    // ── User does not exist for this role → create ────────────────────────────
+    // ── User does not exist → tell the app to redirect to signup ─────────────
     if (!user) {
-      const baseDoc = {
-        name,
-        email: normalizedEmail,
-        profileImage: profileImage ?? null,
-        provider,
-        providerId,
-        emailVerified: true,
-        role,
-        totalJobs: 0,
-        password: null,
-        createdAt: new Date(),
-      };
-
-      const roleDoc =
-        role === "provider"
-          ? {
-              phone: null,
-              address: { street: null, city: null, zip: null },
-              cnic: null,
-              gender: null,
-              category: null,
-              cnicFrontImage: null,
-              cnicBackImage: null,
-              subscriptionStatus: "inactive",
-              badgeSubscriptionStatus: "inactive",
-            }
-          : {
-              cnic: null,
-            };
-
-      const result = await db
-        .collection("users")
-        .insertOne({ ...baseDoc, ...roleDoc });
-
-      user = {
-        _id: result.insertedId,
-        email: normalizedEmail,
-        role,
-        name,
-        profileImage: profileImage ?? null,
-      };
+      return res.status(200).json({ success: false, newUser: true });
     }
 
-    // ── Return token (log in regardless of how the account was originally created) ──
+    // ── Return token ──────────────────────────────────────────────────────────
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
       process.env.SECRET_KEY,
