@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Sidebar from "@/components/Sidebar";
@@ -9,36 +9,240 @@ const ORANGE = "#FE5900";
 const GEIST = "'Geist', sans-serif";
 const PP_MORI = "'PP Mori', sans-serif";
 
+const ACTION_META = {
+  active: {
+    label: "Approve",
+    description: "This will mark the subscription as active.",
+    confirmLabel: "Yes, Approve",
+    confirmBg: ORANGE,
+  },
+  rejected: {
+    label: "Reject",
+    description: "This will reject the subscription request.",
+    confirmLabel: "Yes, Reject",
+    confirmBg: "#B6280C",
+  },
+  fraud: {
+    label: "Mark as Fraud",
+    description: "This will flag this subscription as fraudulent.",
+    confirmLabel: "Yes, Mark as Fraud",
+    confirmBg: "#7B1FA2",
+  },
+};
+
+function Toast({ toasts }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 24,
+        right: 24,
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        pointerEvents: "none",
+      }}
+    >
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          style={{
+            pointerEvents: "auto",
+            minWidth: 280,
+            maxWidth: 360,
+            background: t.type === "success"
+              ? "linear-gradient(135deg, #0D2B1A 0%, #0A2010 100%)"
+              : "linear-gradient(135deg, #2B0D0D 0%, #1A0808 100%)",
+            border: `1px solid ${t.type === "success" ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)"}`,
+            borderRadius: 14,
+            padding: "14px 18px",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 12,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3)",
+            animation: "toastSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+          }}
+        >
+          <div
+            style={{
+              flexShrink: 0,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: t.type === "success" ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {t.type === "success" ? (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8.5L6.5 12L13 5" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M5 5L11 11M11 5L5 11" stroke="#F87171" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: GEIST,
+                fontWeight: 600,
+                fontSize: 13,
+                color: t.type === "success" ? "#34D399" : "#F87171",
+                marginBottom: 2,
+              }}
+            >
+              {t.type === "success" ? "Success" : "Error"}
+            </div>
+            <div
+              style={{
+                fontFamily: GEIST,
+                fontWeight: 400,
+                fontSize: 12,
+                color: "rgba(255,255,255,0.75)",
+                lineHeight: "1.5",
+              }}
+            >
+              {t.message}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ConfirmModal({ action, onConfirm, onCancel, confirming }) {
+  const meta = ACTION_META[action] || {};
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+      }}
+      onClick={onCancel}
+    >
+      <div
+        style={{
+          background: "#001140",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 20,
+          padding: "clamp(24px, 2.5vw, 36px)",
+          width: "clamp(300px, 30vw, 420px)",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
+          position: "relative",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Icon */}
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: "50%",
+            background: "rgba(254,89,0,0.1)",
+            border: "1px solid rgba(254,89,0,0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke={ORANGE} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+
+        <h2
+          style={{
+            fontFamily: PP_MORI,
+            fontWeight: 600,
+            fontSize: "clamp(16px, 1.4vw, 20px)",
+            color: "#ffffff",
+            margin: "0 0 8px 0",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Are you sure?
+        </h2>
+        <p
+          style={{
+            fontFamily: GEIST,
+            fontWeight: 400,
+            fontSize: "clamp(12px, 1vw, 14px)",
+            color: "rgba(255,255,255,0.55)",
+            margin: "0 0 28px 0",
+            lineHeight: "1.6",
+          }}
+        >
+          {meta.description} This action can be changed later if needed.
+        </p>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={confirming}
+            style={{
+              flex: 1,
+              fontFamily: GEIST,
+              fontWeight: 400,
+              fontSize: "clamp(12px, 1vw, 14px)",
+              color: "rgba(255,255,255,0.75)",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 50,
+              padding: "clamp(10px, 0.9vw, 13px) 0",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={confirming}
+            style={{
+              flex: 1,
+              fontFamily: GEIST,
+              fontWeight: 500,
+              fontSize: "clamp(12px, 1vw, 14px)",
+              color: "#ffffff",
+              background: meta.confirmBg || ORANGE,
+              border: "none",
+              borderRadius: 50,
+              padding: "clamp(10px, 0.9vw, 13px) 0",
+              cursor: confirming ? "not-allowed" : "pointer",
+              opacity: confirming ? 0.7 : 1,
+              transition: "opacity 0.15s",
+            }}
+          >
+            {confirming ? "Processing…" : meta.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HamburgerLines() {
   return (
     <>
-      <span
-        style={{
-          display: "block",
-          width: 20,
-          height: 2,
-          background: "#fff",
-          borderRadius: 1,
-        }}
-      />
-      <span
-        style={{
-          display: "block",
-          width: 20,
-          height: 2,
-          background: "#fff",
-          borderRadius: 1,
-        }}
-      />
-      <span
-        style={{
-          display: "block",
-          width: 20,
-          height: 2,
-          background: "#fff",
-          borderRadius: 1,
-        }}
-      />
+      <span style={{ display: "block", width: 20, height: 2, background: "#fff", borderRadius: 1 }} />
+      <span style={{ display: "block", width: 20, height: 2, background: "#fff", borderRadius: 1 }} />
+      <span style={{ display: "block", width: 20, height: 2, background: "#fff", borderRadius: 1 }} />
     </>
   );
 }
@@ -104,6 +308,8 @@ const btnBase = {
   whiteSpace: "nowrap",
 };
 
+let toastCounter = 0;
+
 export default function SubscriptionTicketDetails() {
   const router = useRouter();
   const { id } = router.query;
@@ -111,10 +317,23 @@ export default function SubscriptionTicketDetails() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const toastTimers = useRef({});
 
-  async function updateStatus(status) {
+  function addToast(message, type = "success") {
+    const toastId = ++toastCounter;
+    setToasts((prev) => [...prev, { id: toastId, message, type }]);
+    toastTimers.current[toastId] = setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== toastId));
+      delete toastTimers.current[toastId];
+    }, 4000);
+  }
+
+  async function executeUpdate(status) {
     if (updating) return;
     setUpdating(true);
+    setConfirmAction(null);
     try {
       const res = await fetch("/api/admin/update-subscription-status", {
         method: "POST",
@@ -128,11 +347,16 @@ export default function SubscriptionTicketDetails() {
           const userStatusField = isBadge ? "badgeSubscriptionStatus" : "subscriptionStatus";
           return {
             ...prev,
-            status,
             user: { ...prev.user, [userStatusField]: status },
           };
         });
+        const labels = { active: "approved", rejected: "rejected", fraud: "marked as fraud" };
+        addToast(`Subscription ${labels[status] || "updated"} successfully.`, "success");
+      } else {
+        addToast(data.message || "Failed to update status.", "error");
       }
+    } catch {
+      addToast("Network error. Please try again.", "error");
     } finally {
       setUpdating(false);
     }
@@ -148,16 +372,37 @@ export default function SubscriptionTicketDetails() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    return () => {
+      Object.values(toastTimers.current).forEach(clearTimeout);
+    };
+  }, []);
+
   return (
     <>
       <Head>
         <title>Subscription Ticket Details — Linkaro</title>
       </Head>
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen((v) => !v)}
-      />
+      <style>{`
+        @keyframes toastSlideIn {
+          from { opacity: 0; transform: translateX(40px) scale(0.95); }
+          to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+      `}</style>
+
+      <Toast toasts={toasts} />
+
+      {confirmAction && (
+        <ConfirmModal
+          action={confirmAction}
+          confirming={updating}
+          onConfirm={() => executeUpdate(confirmAction)}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} />
 
       {!sidebarOpen && (
         <div
@@ -226,10 +471,7 @@ export default function SubscriptionTicketDetails() {
       )}
 
       {sidebarOpen && (
-        <div
-          className="sidebar-backdrop"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
 
       <main
@@ -244,13 +486,9 @@ export default function SubscriptionTicketDetails() {
         }}
       >
         {loading ? (
-          <p style={{ fontFamily: GEIST, color: "rgba(255,255,255,0.5)" }}>
-            Loading…
-          </p>
+          <p style={{ fontFamily: GEIST, color: "rgba(255,255,255,0.5)" }}>Loading…</p>
         ) : !item ? (
-          <p style={{ fontFamily: GEIST, color: "rgba(255,255,255,0.5)" }}>
-            Ticket not found.
-          </p>
+          <p style={{ fontFamily: GEIST, color: "rgba(255,255,255,0.5)" }}>Ticket not found.</p>
         ) : (
           <>
             {/* Page header */}
@@ -264,23 +502,46 @@ export default function SubscriptionTicketDetails() {
                 gap: "clamp(10px, 1vw, 14px)",
               }}
             >
-              <h1
-                style={{
-                  fontFamily: PP_MORI,
-                  fontWeight: 600,
-                  fontSize: "clamp(18px, 1.67vw, 24px)",
-                  lineHeight: "29px",
-                  letterSpacing: "-0.02em",
-                  color: "#ffffff",
-                  margin: 0,
-                }}
-              >
-                Subscription Ticket Details
-              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1vw, 14px)" }}>
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/subscription-management")}
+                  style={{
+                    width: "clamp(32px, 2.5vw, 38px)",
+                    height: "clamp(32px, 2.5vw, 38px)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(254,89,0,0.15)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 13L5 8L10 3" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <h1
+                  style={{
+                    fontFamily: PP_MORI,
+                    fontWeight: 600,
+                    fontSize: "clamp(18px, 1.67vw, 24px)",
+                    lineHeight: "29px",
+                    letterSpacing: "-0.02em",
+                    color: "#ffffff",
+                    margin: 0,
+                  }}
+                >
+                  Subscription Ticket Details
+                </h1>
+              </div>
               <div style={{ display: "flex", gap: "clamp(8px, 0.8vw, 12px)" }}>
                 <button
                   type="button"
-                  onClick={() => updateStatus("rejected")}
+                  onClick={() => setConfirmAction("rejected")}
                   disabled={updating}
                   style={{
                     ...btnBase,
@@ -294,7 +555,7 @@ export default function SubscriptionTicketDetails() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => updateStatus("active")}
+                  onClick={() => setConfirmAction("active")}
                   disabled={updating}
                   style={{
                     ...btnBase,
@@ -309,18 +570,12 @@ export default function SubscriptionTicketDetails() {
               </div>
             </div>
 
-            {/* Divider below header */}
-            <div
-              style={{
-                height: 1,
-                background: "rgba(255,255,255,0.1)",
-                marginBottom: "clamp(16px, 1.6vw, 24px)",
-              }}
-            />
+            {/* Divider */}
+            <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: "clamp(16px, 1.6vw, 24px)" }} />
 
             {/* Two-column grid */}
             <div className="ticket-detail-grid">
-              {/* Left: single card with both sections */}
+              {/* Left: info sections */}
               <div
                 style={{
                   border: "1px solid rgba(255,255,255,0.1)",
@@ -415,7 +670,6 @@ export default function SubscriptionTicketDetails() {
                   )}
                 </div>
 
-                {/* Download + view full size — centered */}
                 <div
                   style={{
                     display: "flex",
@@ -458,7 +712,7 @@ export default function SubscriptionTicketDetails() {
               </div>
             </div>
 
-            {/* Bottom action buttons — right aligned, no divider */}
+            {/* Bottom action buttons */}
             <div
               style={{
                 display: "flex",
@@ -470,7 +724,7 @@ export default function SubscriptionTicketDetails() {
             >
               <button
                 type="button"
-                onClick={() => updateStatus("fraud")}
+                onClick={() => setConfirmAction("fraud")}
                 disabled={updating}
                 style={{
                   ...btnBase,
@@ -484,7 +738,7 @@ export default function SubscriptionTicketDetails() {
               </button>
               <button
                 type="button"
-                onClick={() => updateStatus("active")}
+                onClick={() => setConfirmAction("active")}
                 disabled={updating}
                 style={{
                   ...btnBase,
@@ -498,7 +752,7 @@ export default function SubscriptionTicketDetails() {
               </button>
               <button
                 type="button"
-                onClick={() => updateStatus("rejected")}
+                onClick={() => setConfirmAction("rejected")}
                 disabled={updating}
                 style={{
                   ...btnBase,

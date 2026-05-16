@@ -27,8 +27,8 @@ function formatDate(dateStr) {
 function SortIcon() {
   return (
     <svg
-      width="7"
-      height="10"
+      width="9"
+      height="13"
       viewBox="0 0 7 10"
       fill="none"
       style={{ marginLeft: 5, flexShrink: 0 }}
@@ -107,7 +107,7 @@ export default function SubscriptionManagement() {
   const thStyle = {
     fontFamily: GEIST,
     fontWeight: 400,
-    fontSize: "clamp(9px, 0.7vw, 10px)",
+    fontSize: "clamp(12px, 1vw, 14px)",
     lineHeight: "14px",
     letterSpacing: "0",
     color: "rgba(255,255,255,0.5)",
@@ -368,7 +368,7 @@ export default function SubscriptionManagement() {
           </div>
 
           {/* Table */}
-          <div style={{ overflowX: "auto" }}>
+          <div className="table-scroll" style={{ overflowX: "auto" }}>
             <table
               style={{
                 width: "100%",
@@ -408,7 +408,7 @@ export default function SubscriptionManagement() {
                       colSpan={5}
                       style={{
                         fontFamily: GEIST,
-                        fontSize: "clamp(9px, 0.7vw, 10px)",
+                        fontSize: "clamp(12px, 1vw, 14px)",
                         color: "rgba(255,255,255,0.4)",
                         padding: "clamp(20px, 2vw, 32px)",
                         textAlign: "center",
@@ -423,7 +423,7 @@ export default function SubscriptionManagement() {
                       colSpan={5}
                       style={{
                         fontFamily: GEIST,
-                        fontSize: "clamp(9px, 0.7vw, 10px)",
+                        fontSize: "clamp(12px, 1vw, 14px)",
                         color: "rgba(255,255,255,0.4)",
                         padding: "clamp(20px, 2vw, 32px)",
                         textAlign: "center",
@@ -438,7 +438,7 @@ export default function SubscriptionManagement() {
                     const td = {
                       fontFamily: GEIST,
                       fontWeight: 400,
-                      fontSize: "clamp(9px, 0.7vw, 10px)",
+                      fontSize: "clamp(12px, 1vw, 14px)",
                       lineHeight: "14px",
                       letterSpacing: "0",
                       color: "#ffffff",
@@ -473,8 +473,8 @@ export default function SubscriptionManagement() {
                               display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: "24px",
-                              height: "24px",
+                              width: "28px",
+                              height: "28px",
                             }}
                           >
                             <img
@@ -561,6 +561,28 @@ export default function SubscriptionManagement() {
           </button>
         </div>
       </main>
+
+      <style>{`
+        .table-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(254,89,0,0.55) rgba(255,255,255,0.04);
+        }
+        .table-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+          background: rgba(255,255,255,0.04);
+          border-radius: 10px;
+          margin: 0 16px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+          background: rgba(254,89,0,0.55);
+          border-radius: 10px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(254,89,0,0.9);
+        }
+      `}</style>
     </>
   );
 }

@@ -38,11 +38,47 @@ function formatDate(dateStr) {
   return `${day}-${months[d.getMonth()]}-${d.getFullYear().toString().slice(-2)}`;
 }
 
+function StatusBadge({ status }) {
+  const s = (status != null ? String(status) : "").toLowerCase();
+  let bg, color, label;
+  if (s === "true" || s === "active" || s === "approved" || s === "verified") {
+    bg = "rgba(20,202,116,0.12)"; color = "#14CA74";
+    label = s === "true" ? "Verified" : status;
+  } else if (s === "pending") {
+    bg = "rgba(255,184,0,0.12)"; color = "#FFB800";
+    label = status;
+  } else if (s === "false" || s === "rejected" || s === "suspended" || s === "blocked" || s === "inactive") {
+    bg = "rgba(255,90,101,0.12)"; color = "#FF5A65";
+    label = s === "false" ? "Unverified" : status;
+  } else {
+    bg = "rgba(255,255,255,0.08)"; color = "rgba(255,255,255,0.45)";
+    label = status;
+  }
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        background: bg,
+        color,
+        fontFamily: GEIST,
+        fontWeight: 500,
+        fontSize: "clamp(12px, 1vw, 14px)",
+        padding: "4px 10px",
+        borderRadius: 50,
+        whiteSpace: "nowrap",
+        textTransform: "capitalize",
+      }}
+    >
+      {label || "—"}
+    </span>
+  );
+}
+
 function SortIcon() {
   return (
     <svg
-      width="7"
-      height="10"
+      width="9"
+      height="13"
       viewBox="0 0 7 10"
       fill="none"
       style={{ marginLeft: 4, flexShrink: 0 }}
@@ -117,11 +153,12 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [regFilter, setRegFilter] = useState("all");
   const [deleteModal, setDeleteModal] = useState(null);
 
   useEffect(() => {
     setPage(1);
-  }, [search, roleFilter]);
+  }, [search, roleFilter, regFilter]);
 
   useEffect(() => {
     fetch("/api/admin/get-users")
@@ -147,7 +184,11 @@ export default function UserManagement() {
       (u.name || "").toLowerCase().includes(q) ||
       (u.email || "").toLowerCase().includes(q);
     const roleMatch = roleFilter === "all" || u.role === roleFilter;
-    return nameMatch && roleMatch;
+    const regMatch =
+      regFilter === "all" ||
+      (regFilter === "unverified" && u.registrationStatus === false) ||
+      (regFilter === "verified" && u.registrationStatus === true);
+    return nameMatch && roleMatch && regMatch;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -158,7 +199,7 @@ export default function UserManagement() {
   const thStyle = {
     fontFamily: GEIST,
     fontWeight: 400,
-    fontSize: "clamp(9px, 0.7vw, 10px)",
+    fontSize: "clamp(12px, 1vw, 14px)",
     lineHeight: "14px",
     color: "rgba(255,255,255,0.5)",
     padding: "clamp(10px, 0.9vw, 14px) clamp(10px, 1vw, 16px)",
@@ -440,7 +481,7 @@ export default function UserManagement() {
                     style={{
                       fontFamily: GEIST,
                       fontWeight: 500,
-                      fontSize: "clamp(9px, 0.7vw, 10px)",
+                      fontSize: "clamp(12px, 1vw, 14px)",
                       lineHeight: "14px",
                       color: pctColor,
                       background: pctBg,
@@ -525,10 +566,7 @@ export default function UserManagement() {
                   fontWeight: roleFilter === val ? 600 : 400,
                   padding: "clamp(5px, 0.5vw, 8px) clamp(10px, 1vw, 16px)",
                   borderRadius: 50,
-                  border:
-                    roleFilter === val
-                      ? "none"
-                      : "1px solid rgba(255,255,255,0.2)",
+                  border: roleFilter === val ? "none" : "1px solid rgba(255,255,255,0.2)",
                   background: roleFilter === val ? ORANGE : "transparent",
                   color: "#ffffff",
                   cursor: "pointer",
@@ -538,6 +576,58 @@ export default function UserManagement() {
                 {label}
               </button>
             ))}
+          </div>
+
+          {/* Registration status filter */}
+          <div
+            style={{
+              display: "flex",
+              gap: "clamp(4px, 0.5vw, 8px)",
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: GEIST,
+                fontSize: "clamp(9px, 0.75vw, 11px)",
+                color: "rgba(255,255,255,0.35)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Registration:
+            </span>
+            {[
+              ["all", "All"],
+              ["verified", "Verified"],
+              ["unverified", "Unverified"],
+            ].map(([val, label]) => {
+              const isActive = regFilter === val;
+              let activeBg = ORANGE;
+              if (val === "verified") activeBg = "rgba(20,202,116,0.85)";
+              if (val === "unverified") activeBg = "rgba(255,90,101,0.85)";
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setRegFilter(val)}
+                  style={{
+                    fontFamily: GEIST,
+                    fontSize: "clamp(9px, 0.75vw, 11px)",
+                    fontWeight: isActive ? 600 : 400,
+                    padding: "clamp(5px, 0.5vw, 8px) clamp(10px, 1vw, 16px)",
+                    borderRadius: 50,
+                    border: isActive ? "none" : "1px solid rgba(255,255,255,0.2)",
+                    background: isActive ? activeBg : "transparent",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -596,17 +686,17 @@ export default function UserManagement() {
           </div>
 
           {/* Table */}
-          <div style={{ overflowX: "auto" }}>
+          <div className="table-scroll" style={{ overflowX: "auto" }}>
             <table
               style={{
                 width: "100%",
                 borderCollapse: "collapse",
-                minWidth: 480,
+                minWidth: 860,
               }}
             >
               <thead>
                 <tr>
-                  {["Name", "Phone", "Date of Joining", "Category"].map((h) => (
+                  {["Name", "Phone", "Date of Joining", "Category", "Registration Status"].map((h) => (
                     <th key={h} style={thStyle}>
                       <span
                         style={{ display: "inline-flex", alignItems: "center" }}
@@ -615,17 +705,17 @@ export default function UserManagement() {
                       </span>
                     </th>
                   ))}
-                  <th style={{ ...thStyle, width: 64 }} />
+                  <th style={{ ...thStyle, width: 80, minWidth: 80 }} />
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       style={{
                         fontFamily: GEIST,
-                        fontSize: "clamp(9px, 0.7vw, 10px)",
+                        fontSize: "clamp(12px, 1vw, 14px)",
                         color: "rgba(255,255,255,0.4)",
                         padding: "clamp(20px, 2vw, 32px)",
                         textAlign: "center",
@@ -637,10 +727,10 @@ export default function UserManagement() {
                 ) : pageData.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       style={{
                         fontFamily: GEIST,
-                        fontSize: "clamp(9px, 0.7vw, 10px)",
+                        fontSize: "clamp(12px, 1vw, 14px)",
                         color: "rgba(255,255,255,0.4)",
                         padding: "clamp(20px, 2vw, 32px)",
                         textAlign: "center",
@@ -655,7 +745,7 @@ export default function UserManagement() {
                     const tdBase = {
                       fontFamily: GEIST,
                       fontWeight: 400,
-                      fontSize: "clamp(9px, 0.7vw, 10px)",
+                      fontSize: "clamp(12px, 1vw, 14px)",
                       lineHeight: "14px",
                       color: "#AEB9E1",
                       padding:
@@ -678,8 +768,8 @@ export default function UserManagement() {
                               alt=""
                               referrerPolicy="no-referrer"
                               style={{
-                                width: "clamp(24px, 2.2vw, 32px)",
-                                height: "clamp(24px, 2.2vw, 32px)",
+                                width: "clamp(36px, 3vw, 44px)",
+                                height: "clamp(36px, 3vw, 44px)",
                                 borderRadius: "50%",
                                 objectFit: "cover",
                                 flexShrink: 0,
@@ -693,7 +783,7 @@ export default function UserManagement() {
                                 style={{
                                   fontFamily: GEIST,
                                   fontWeight: 500,
-                                  fontSize: "clamp(9px, 0.7vw, 10px)",
+                                  fontSize: "clamp(12px, 1vw, 14px)",
                                   lineHeight: "14px",
                                   color: "#ffffff",
                                   whiteSpace: "nowrap",
@@ -705,7 +795,7 @@ export default function UserManagement() {
                                 style={{
                                   fontFamily: GEIST,
                                   fontWeight: 400,
-                                  fontSize: "clamp(9px, 0.7vw, 10px)",
+                                  fontSize: "clamp(12px, 1vw, 14px)",
                                   lineHeight: "14px",
                                   color: "#AEB9E1",
                                   whiteSpace: "nowrap",
@@ -725,8 +815,11 @@ export default function UserManagement() {
                               ? "Consumer"
                               : "—"}
                         </td>
+                        <td style={tdBase}>
+                          <StatusBadge status={row.registrationStatus} />
+                        </td>
                         {/* Actions */}
-                        <td style={{ ...tdBase, textAlign: "center" }}>
+                        <td style={{ ...tdBase, textAlign: "center", minWidth: 80 }}>
                           <div
                             style={{
                               display: "inline-flex",
@@ -753,8 +846,8 @@ export default function UserManagement() {
                                 src="/edit-pencil-icon.png"
                                 alt="Edit"
                                 style={{
-                                  width: "clamp(14px, 1.2vw, 16px)",
-                                  height: "clamp(14px, 1.2vw, 16px)",
+                                  width: "clamp(18px, 1.5vw, 22px)",
+                                  height: "clamp(18px, 1.5vw, 22px)",
                                   filter: "brightness(0) invert(1)",
                                   opacity: 0.6,
                                 }}
@@ -779,8 +872,8 @@ export default function UserManagement() {
                                 src="/bin-icon.png"
                                 alt="Delete"
                                 style={{
-                                  width: "clamp(14px, 1.2vw, 16px)",
-                                  height: "clamp(14px, 1.2vw, 16px)",
+                                  width: "clamp(18px, 1.5vw, 22px)",
+                                  height: "clamp(18px, 1.5vw, 22px)",
                                   filter: "brightness(0) invert(1)",
                                   opacity: 0.6,
                                 }}
@@ -973,6 +1066,25 @@ export default function UserManagement() {
       )}
 
       <style>{`
+        .table-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(254,89,0,0.55) rgba(255,255,255,0.04);
+        }
+        .table-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+          background: rgba(255,255,255,0.04);
+          border-radius: 10px;
+          margin: 0 16px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+          background: rgba(254,89,0,0.55);
+          border-radius: 10px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(254,89,0,0.9);
+        }
         .user-stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);

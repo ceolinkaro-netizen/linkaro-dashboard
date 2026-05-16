@@ -4,20 +4,56 @@ import { useRouter } from "next/router";
 import Sidebar from "@/components/Sidebar";
 
 const PROVIDER_CATEGORIES = [
-  "Computer Repair", "Laptop Repair", "Printer Repair", "Mobile Phone Repair",
-  "Network Technician", "System Technician", "Technical Support", "Software Installation",
-  "Data Recovery Service", "Website Developer", "Graphic Designer",
-  "CCTV Camera Installation & Repair", "Mechanic", "Tire Repair / Puncture Service",
-  "Electrician", "Plumber", "AC Repair & Installation", "Refrigerator Repair",
-  "Washing Machine Repair", "Geyser / Water Heater Repair", "Generator Repair",
-  "UPS / Inverter Repair", "Solar Panel Technician", "Carpenter",
-  "Mason / Construction Worker", "Painter", "Welder", "Glass & Aluminum Work",
-  "Rooftop Waterproofing", "Home Cleaner", "Gardener / Mali", "Labor / Mazdoor",
-  "Barber", "Beautician", "Makeup Artist", "Hair Stylist", "Tailor",
-  "Home Food Service", "Lunch Box Service", "Catering Service", "Home Baker",
-  "Car Wash Service", "Bike Mechanic", "Car Towing Service", "Photographer",
-  "Videographer", "Drone Camera Service", "Event Decorator",
-  "DJ & Sound System Service", "Fitness Trainer",
+  "Computer Repair",
+  "Laptop Repair",
+  "Printer Repair",
+  "Mobile Phone Repair",
+  "Network Technician",
+  "System Technician",
+  "Technical Support",
+  "Software Installation",
+  "Data Recovery Service",
+  "Website Developer",
+  "Graphic Designer",
+  "CCTV Camera Installation & Repair",
+  "Mechanic",
+  "Tire Repair / Puncture Service",
+  "Electrician",
+  "Plumber",
+  "AC Repair & Installation",
+  "Refrigerator Repair",
+  "Washing Machine Repair",
+  "Geyser / Water Heater Repair",
+  "Generator Repair",
+  "UPS / Inverter Repair",
+  "Solar Panel Technician",
+  "Carpenter",
+  "Mason / Construction Worker",
+  "Painter",
+  "Welder",
+  "Glass & Aluminum Work",
+  "Rooftop Waterproofing",
+  "Home Cleaner",
+  "Gardener / Mali",
+  "Labor / Mazdoor",
+  "Barber",
+  "Beautician",
+  "Makeup Artist",
+  "Hair Stylist",
+  "Tailor",
+  "Home Food Service",
+  "Lunch Box Service",
+  "Catering Service",
+  "Home Baker",
+  "Car Wash Service",
+  "Bike Mechanic",
+  "Car Towing Service",
+  "Photographer",
+  "Videographer",
+  "Drone Camera Service",
+  "Event Decorator",
+  "DJ & Sound System Service",
+  "Fitness Trainer",
 ];
 
 const SIDEBAR_W = 260;
@@ -87,47 +123,95 @@ function CustomSelect({ value, onChange, options }) {
           outline: "none",
         }}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {display}
         </span>
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"
-          style={{ flexShrink: 0, marginLeft: 6, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
-          <path d="M1 1L5 5L9 1" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg
+          width="10"
+          height="6"
+          viewBox="0 0 10 6"
+          fill="none"
+          style={{
+            flexShrink: 0,
+            marginLeft: 6,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.15s",
+          }}
+        >
+          <path
+            d="M1 1L5 5L9 1"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-          background: "#0D1B3E", border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: 8, zIndex: 50, maxHeight: 220, overflowY: "auto",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-          scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent",
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            background: "#0D1B3E",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: 8,
+            zIndex: 50,
+            maxHeight: 220,
+            overflowY: "auto",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255,255,255,0.15) transparent",
+          }}
+        >
           <div
-            onClick={() => { onChange(""); setOpen(false); }}
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
             style={{
-              padding: "8px 12px", fontFamily: GEIST,
+              padding: "8px 12px",
+              fontFamily: GEIST,
               fontSize: "clamp(10px, 0.83vw, 13px)",
-              color: "rgba(255,255,255,0.35)", cursor: "pointer",
+              color: "rgba(255,255,255,0.35)",
+              cursor: "pointer",
               borderBottom: "1px solid rgba(255,255,255,0.07)",
             }}
           >
             — Select —
           </div>
           {options.map((o) => (
-            <div key={o}
-              onClick={() => { onChange(o); setOpen(false); }}
+            <div
+              key={o}
+              onClick={() => {
+                onChange(o);
+                setOpen(false);
+              }}
               style={{
-                padding: "8px 12px", fontFamily: GEIST,
+                padding: "8px 12px",
+                fontFamily: GEIST,
                 fontSize: "clamp(10px, 0.83vw, 13px)",
                 color: o === value ? ORANGE : "#ffffff",
                 background: o === value ? "rgba(254,89,0,0.1)" : "transparent",
                 cursor: "pointer",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { if (o !== value) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = o === value ? "rgba(254,89,0,0.1)" : "transparent"; }}
+              onMouseEnter={(e) => {
+                if (o !== value)
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background =
+                  o === value ? "rgba(254,89,0,0.1)" : "transparent";
+              }}
             >
               {o}
             </div>
@@ -135,6 +219,42 @@ function CustomSelect({ value, onChange, options }) {
         </div>
       )}
     </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const s = (status != null ? String(status) : "").toLowerCase();
+  let bg, color, label;
+  if (s === "true" || s === "active" || s === "approved" || s === "verified") {
+    bg = "rgba(20,202,116,0.12)"; color = "#14CA74";
+    label = s === "true" ? "Verified" : status;
+  } else if (s === "pending") {
+    bg = "rgba(255,184,0,0.12)"; color = "#FFB800";
+    label = status;
+  } else if (s === "false" || s === "rejected" || s === "suspended" || s === "blocked" || s === "inactive") {
+    bg = "rgba(255,90,101,0.12)"; color = "#FF5A65";
+    label = s === "false" ? "Unverified" : status;
+  } else {
+    bg = "rgba(255,255,255,0.08)"; color = "rgba(255,255,255,0.45)";
+    label = status;
+  }
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        background: bg,
+        color,
+        fontFamily: GEIST,
+        fontWeight: 500,
+        fontSize: "clamp(12px, 1vw, 14px)",
+        padding: "4px 12px",
+        borderRadius: 50,
+        whiteSpace: "nowrap",
+        textTransform: "capitalize",
+      }}
+    >
+      {label || "—"}
+    </span>
   );
 }
 
@@ -179,7 +299,11 @@ function InfoRow({
         }}
       />
       {editMode && options ? (
-        <CustomSelect value={inputValue} onChange={onChange} options={options} />
+        <CustomSelect
+          value={inputValue}
+          onChange={onChange}
+          options={options}
+        />
       ) : editMode ? (
         <input
           type={type}
@@ -345,6 +469,7 @@ export default function UserDetail() {
       profileImage: u.profileImage || "",
       cnicFrontImage: u.cnicFrontImage || "",
       cnicBackImage: u.cnicBackImage || "",
+      registrationStatus: u.registrationStatus === true ? "verified" : u.registrationStatus === false ? "unverified" : "",
     });
   }
 
@@ -356,7 +481,8 @@ export default function UserDetail() {
   async function confirmSave() {
     setSaving(true);
     try {
-      const payload = { id, ...form };
+      const regStatus = form.registrationStatus === "verified" ? true : form.registrationStatus === "unverified" ? false : undefined;
+      const payload = { id, ...form, registrationStatus: regStatus };
       const res = await fetch("/api/admin/update-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -375,6 +501,7 @@ export default function UserDetail() {
           profileImage: form.profileImage || prev.profileImage,
           cnicFrontImage: form.cnicFrontImage || prev.cnicFrontImage,
           cnicBackImage: form.cnicBackImage || prev.cnicBackImage,
+          registrationStatus: form.registrationStatus === "verified" ? true : false,
         }));
         setEditMode(false);
       }
@@ -504,33 +631,44 @@ export default function UserDetail() {
                 marginBottom: "clamp(20px, 2vw, 32px)",
               }}
             >
-              <div>
-                <h1
+              <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1vw, 14px)" }}>
+                <button
+                  type="button"
+                  onClick={() => router.push("/admin/user-management")}
                   style={{
-                    fontFamily: GEIST,
-                    fontWeight: 500,
-                    fontSize: "clamp(14px, 1.1vw, 16px)",
-                    lineHeight: "18px",
-                    letterSpacing: "0",
-                    color: "#ffffff",
-                    margin: "0 0 6px 0",
+                    width: "clamp(32px, 2.5vw, 38px)",
+                    height: "clamp(32px, 2.5vw, 38px)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    transition: "background 0.15s",
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(254,89,0,0.15)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
                 >
-                  Personal information
-                </h1>
-                <p
-                  style={{
-                    fontFamily: GEIST,
-                    fontWeight: 400,
-                    fontSize: "clamp(12px, 0.97vw, 14px)",
-                    lineHeight: "14px",
-                    letterSpacing: "0",
-                    color: "#AEB9E1",
-                    margin: 0,
-                  }}
-                >
-                  View and manage user profile details.
-                </p>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 13L5 8L10 3" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div>
+                  <h1 style={{
+                    fontFamily: GEIST, fontWeight: 500,
+                    fontSize: "clamp(14px, 1.1vw, 16px)", lineHeight: "18px",
+                    letterSpacing: "0", color: "#ffffff", margin: "0 0 5px 0",
+                  }}>
+                    Personal information
+                  </h1>
+                  <p style={{
+                    fontFamily: GEIST, fontWeight: 400,
+                    fontSize: "clamp(12px, 0.97vw, 14px)", lineHeight: "14px",
+                    letterSpacing: "0", color: "#AEB9E1", margin: 0,
+                  }}>
+                    View and manage user profile details.
+                  </p>
+                </div>
               </div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 {editMode && (
@@ -769,6 +907,40 @@ export default function UserDetail() {
                 onChange={f("gender")}
                 options={["Male", "Female", "Other"]}
               />
+              {/* Registration Status — provider only */}
+              {isProvider && <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  padding: "clamp(10px, 1vw, 14px) 0",
+                  gap: "clamp(12px, 1.2vw, 20px)",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: GEIST,
+                    fontWeight: 400,
+                    fontSize: "clamp(10px, 0.83vw, 12px)",
+                    lineHeight: "100%",
+                    color: "rgba(255,255,255,0.55)",
+                    flexShrink: 0,
+                    width: "clamp(100px, 12vw, 150px)",
+                  }}
+                >
+                  Registration Status
+                </span>
+                <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+                {editMode ? (
+                  <CustomSelect
+                    value={form.registrationStatus}
+                    onChange={f("registrationStatus")}
+                    options={["verified", "unverified"]}
+                  />
+                ) : (
+                  <StatusBadge status={user.registrationStatus} />
+                )}
+              </div>}
               {isProvider && (
                 <InfoRow
                   label="Category"

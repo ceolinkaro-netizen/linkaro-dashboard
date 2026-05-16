@@ -41,6 +41,7 @@ export default async function handler(req, res) {
     }
 
     if (fields.profileImage) update.profileImage = fields.profileImage;
+    if (fields.registrationStatus !== undefined && fields.registrationStatus !== null) update.registrationStatus = fields.registrationStatus;
 
     if (user.role === "provider") {
       if (fields.category)       update.category       = fields.category;
