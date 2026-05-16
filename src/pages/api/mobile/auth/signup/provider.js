@@ -120,6 +120,7 @@ export default async function handler(req, res) {
       cnicBackImage,
       subscriptionStatus: "inactive",
       badgeSubscriptionStatus: "inactive",
+      registrationStatus: false,
       createdAt: new Date(),
     });
 

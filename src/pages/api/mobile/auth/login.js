@@ -50,6 +50,11 @@ export default async function handler(req, res) {
         .json({ message: "You don't have access with this role" });
     }
 
+    // Provider whose registration hasn't been approved yet
+    if (role === "provider" && user.registrationStatus === false) {
+      return res.status(200).json({ success: false, registrationPending: true });
+    }
+
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
       process.env.SECRET_KEY,
