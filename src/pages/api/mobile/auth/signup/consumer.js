@@ -43,6 +43,13 @@ export default async function handler(req, res) {
       return res.status(409).json({ message: "Email is already registered" });
     }
 
+    const existingCnic = await db
+      .collection("users")
+      .findOne({ cnic, role: "consumer" });
+    if (existingCnic) {
+      return res.status(409).json({ message: "CNIC is already registered" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.collection("users").insertOne({
