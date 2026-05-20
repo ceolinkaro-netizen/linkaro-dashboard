@@ -5,14 +5,14 @@ const transporter = nodemailer.createTransport({
   port: Number(process.env.EMAIL_PORT) || 587,
   secure: process.env.EMAIL_SECURE === "true",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD,
   },
 });
 
 export async function sendEmail({ to, subject, html, text }) {
   return transporter.sendMail({
-    from: `"Linkaro" <${process.env.EMAIL_USER}>`,
+    from: `"Linkaro" <${process.env.EMAIL}>`,
     to,
     subject,
     text: text || subject,
