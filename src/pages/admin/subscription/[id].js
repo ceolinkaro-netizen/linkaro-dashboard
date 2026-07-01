@@ -311,6 +311,54 @@ const btnBase = {
 
 let toastCounter = 0;
 
+function ImageLightbox({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2000,
+        background: "rgba(0,0,0,0.92)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 24,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "#ffffff",
+          fontSize: 28,
+          lineHeight: 1,
+          padding: 4,
+        }}
+      >
+        ✕
+      </button>
+      <img
+        src={src}
+        alt="Preview"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "90vw",
+          maxHeight: "90vh",
+          objectFit: "contain",
+          borderRadius: 8,
+        }}
+      />
+    </div>
+  );
+}
+
 export default function SubscriptionTicketDetails() {
   const router = useRouter();
   const { id } = router.query;
@@ -320,6 +368,7 @@ export default function SubscriptionTicketDetails() {
   const [updating, setUpdating] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [toasts, setToasts] = useState([]);
+  const [previewSrc, setPreviewSrc] = useState(null);
   const toastTimers = useRef({});
 
   function addToast(message, type = "success") {
@@ -637,18 +686,51 @@ export default function SubscriptionTicketDetails() {
                   }}
                 >
                   {item.receiptImage ? (
-                    <img
-                      src={item.receiptImage}
-                      alt="Receipt"
-                      style={{
-                        width: "100%",
-                        maxWidth: "100%",
-                        maxHeight: "320px",
-                        borderRadius: 12,
-                        display: "block",
-                        objectFit: "contain",
+                    <div
+                      style={{ position: "relative", display: "inline-block", width: "100%" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.querySelector(".preview-overlay").style.opacity = "1";
                       }}
-                    />
+                      onMouseLeave={(e) => {
+                        e.currentTarget.querySelector(".preview-overlay").style.opacity = "0";
+                      }}
+                    >
+                      <img
+                        src={item.receiptImage}
+                        alt="Receipt"
+                        style={{
+                          width: "100%",
+                          maxWidth: "100%",
+                          maxHeight: "320px",
+                          borderRadius: 12,
+                          display: "block",
+                          objectFit: "contain",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="preview-overlay"
+                        onClick={() => setPreviewSrc(item.receiptImage)}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "rgba(0,0,0,0.5)",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#fff",
+                          fontFamily: GEIST,
+                          fontSize: "clamp(11px, 0.9vw, 13px)",
+                          borderRadius: 12,
+                          opacity: 0,
+                          transition: "opacity 0.15s",
+                        }}
+                      >
+                        Click to preview
+                      </button>
+                    </div>
                   ) : (
                     <div
                       style={{
@@ -693,21 +775,6 @@ export default function SubscriptionTicketDetails() {
                   >
                     Download Image
                   </a>
-                  {item.receiptImage && (
-                    <span
-                      onClick={() => window.open(item.receiptImage, "_blank")}
-                      style={{
-                        fontFamily: GEIST,
-                        fontWeight: 400,
-                        fontSize: "clamp(10px, 0.83vw, 12px)",
-                        lineHeight: "14px",
-                        color: "rgba(255,255,255,0.5)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      view full size
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -768,6 +835,8 @@ export default function SubscriptionTicketDetails() {
           </>
         )}
       </main>
+
+      <ImageLightbox src={previewSrc} onClose={() => setPreviewSrc(null)} />
     </>
   );
 }

@@ -556,8 +556,57 @@ function InfoRow({
   );
 }
 
-function CnicImageBox({ label, src, editMode, onChange }) {
+function ImageLightbox({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2000,
+        background: "rgba(0,0,0,0.92)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 24,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "#ffffff",
+          fontSize: 28,
+          lineHeight: 1,
+          padding: 4,
+        }}
+      >
+        ✕
+      </button>
+      <img
+        src={src}
+        alt="Preview"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "90vw",
+          maxHeight: "90vh",
+          objectFit: "contain",
+          borderRadius: 8,
+        }}
+      />
+    </div>
+  );
+}
+
+function CnicImageBox({ label, src, editMode, onChange, onPreview }) {
   const ref = useRef();
+  const [hovered, setHovered] = useState(false);
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <p
@@ -607,7 +656,7 @@ function CnicImageBox({ label, src, editMode, onChange }) {
             No image
           </div>
         )}
-        {editMode && (
+        {editMode ? (
           <>
             <button
               type="button"
@@ -642,7 +691,30 @@ function CnicImageBox({ label, src, editMode, onChange }) {
               }}
             />
           </>
-        )}
+        ) : src ? (
+          <button
+            type="button"
+            onClick={() => onPreview && onPreview(src)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: hovered ? "rgba(0,0,0,0.5)" : "transparent",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontFamily: GEIST,
+              fontSize: "clamp(9px, 0.7vw, 11px)",
+              transition: "background 0.15s",
+            }}
+          >
+            {hovered ? "Click to preview" : ""}
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -658,6 +730,7 @@ export default function UserDetail() {
   const [form, setForm] = useState({});
   const [saveModal, setSaveModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [regStatusConfirm, setRegStatusConfirm] = useState(false);
   const profileInputRef = useRef();
@@ -1346,12 +1419,14 @@ export default function UserDetail() {
                       src={editMode ? form.cnicFrontImage : user.cnicFrontImage}
                       editMode={editMode}
                       onChange={f("cnicFrontImage")}
+                      onPreview={setPreviewSrc}
                     />
                     <CnicImageBox
                       label="Back"
                       src={editMode ? form.cnicBackImage : user.cnicBackImage}
                       editMode={editMode}
                       onChange={f("cnicBackImage")}
+                      onPreview={setPreviewSrc}
                     />
                   </div>
                 </div>
@@ -1360,6 +1435,8 @@ export default function UserDetail() {
           </>
         )}
       </main>
+
+      <ImageLightbox src={previewSrc} onClose={() => setPreviewSrc(null)} />
 
       {/* Registration status confirmation modal */}
       {regStatusConfirm && (
