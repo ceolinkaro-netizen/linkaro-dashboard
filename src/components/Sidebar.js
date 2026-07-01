@@ -78,7 +78,8 @@ function NavLink({ item, isActive }) {
 export default function Sidebar({ isOpen, onToggle }) {
   const router = useRouter();
   const settingsActive = router.pathname === "/settings";
-  const { role } = useAuth();
+  const { role, name } = useAuth();
+  const displayName = name || "John";
 
   const visibleHrefs = ROLE_VISIBLE_HREFS[role];
   const visibleNavItems = visibleHrefs
@@ -264,7 +265,7 @@ export default function Sidebar({ isOpen, onToggle }) {
           >
             <Image
               src="/profile-image.png"
-              alt="John Carter"
+              alt={displayName}
               fill
               style={{ objectFit: "cover" }}
             />
@@ -283,7 +284,7 @@ export default function Sidebar({ isOpen, onToggle }) {
                 textOverflow: "ellipsis",
               }}
             >
-              John Carter
+              {displayName}
             </div>
             <div
               style={{

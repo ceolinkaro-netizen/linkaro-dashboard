@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/authContext";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Sidebar from "@/components/Sidebar";
@@ -142,6 +143,8 @@ const CARDS = [
 
 export default function UserManagement() {
   const router = useRouter();
+  const { name } = useAuth();
+  const displayName = name || "John";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [page, setPage] = useState(1);
   const [users, setUsers] = useState([]);
@@ -344,7 +347,7 @@ export default function UserManagement() {
                 margin: "0 0 6px 0",
               }}
             >
-              Welcome Back, John
+              Welcome Back, {displayName}
             </h1>
             <p
               style={{

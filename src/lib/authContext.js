@@ -14,11 +14,12 @@ const ROLE_HOME = {
   "ticket manager": "/ticket-management",
 };
 
-const AuthContext = createContext({ role: null, loading: true });
+const AuthContext = createContext({ role: null, name: null, loading: true });
 
 export function AuthProvider({ children }) {
   const router = useRouter();
   const [role, setRole] = useState(null);
+  const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function AuthProvider({ children }) {
         if (cancelled || !data.success) throw new Error("unauthorized");
 
         setRole(data.role);
+        setName(data.name || null);
 
         const home = ROLE_HOME[data.role];
         if (home && router.pathname !== home) {
@@ -63,7 +65,7 @@ export function AuthProvider({ children }) {
   const isPublic = PUBLIC_PATHS.includes(router.pathname);
 
   return (
-    <AuthContext.Provider value={{ role, loading }}>
+    <AuthContext.Provider value={{ role, name, loading }}>
       {isPublic || !loading ? children : null}
     </AuthContext.Provider>
   );

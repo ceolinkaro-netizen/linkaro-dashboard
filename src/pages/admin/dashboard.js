@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/lib/authContext";
 import Head from "next/head";
 import Sidebar from "@/components/Sidebar";
 import { apiFetch } from "@/lib/api";
@@ -401,6 +402,8 @@ function DeviceGauge() {
 }
 
 export default function AdminDashboard() {
+  const { name } = useAuth();
+  const displayName = name || "John";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [range, setRange] = useState("12m");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -584,7 +587,7 @@ export default function AdminDashboard() {
                 margin: "0 0 6px 0",
               }}
             >
-              Welcome Back, John
+              Welcome Back, {displayName}
             </h1>
             <p
               style={{
