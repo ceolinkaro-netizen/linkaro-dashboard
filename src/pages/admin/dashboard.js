@@ -895,7 +895,7 @@ export default function AdminDashboard() {
                               {approved ? "Approved" : status}
                             </span>
                           </td>
-                          <td style={td}>Rs {planPrice(sub.subscriptionType).toLocaleString()}</td>
+                          <td style={td}>Rs {planPricePkr(sub.subscriptionType).toLocaleString()}</td>
                         </tr>
                       );
                     })
