@@ -45,8 +45,8 @@ export default async function handler(req, res) {
     if (fields.registrationStatus !== undefined && fields.registrationStatus !== null) update.registrationStatus = fields.registrationStatus;
 
     if (user.role === "provider") {
-      if (fields.category) {
-        update.category = fields.category;
+      if (Array.isArray(fields.categories) && fields.categories.length > 0) {
+        update.categories = fields.categories;
       }
       if (fields.cnicFrontImage) update.cnicFrontImage = fields.cnicFrontImage;
       if (fields.cnicBackImage)  update.cnicBackImage  = fields.cnicBackImage;

@@ -57,42 +57,65 @@ const PROVIDER_CATEGORIES = [
   "Fitness Trainer",
 ];
 
-// Same list as the mobile app's lib/constants/pakistan_cities.dart — kept in
-// sync so an address entered here resolves to the same set of places the
-// backend's geocoding (constrained to Pakistan) expects.
-const PAKISTAN_CITIES = [
-  "Abbottabad", "Ahmedpur East", "Arifwala", "Astore", "Attock", "Awaran",
-  "Bagh", "Bahawalnagar", "Bahawalpur", "Bannu", "Barkhan", "Battagram",
-  "Bhakkar", "Bhimber", "Bolan", "Buner", "Burewala", "Chaman", "Charsadda",
-  "Chakwal", "Chiniot", "Chishtian", "Chitral", "Dadu", "Daska",
-  "Dera Allah Yar", "Dera Ghazi Khan", "Dera Ismail Khan",
-  "Dera Murad Jamali", "Diamer", "Faisalabad", "Fazilpur", "Ghanche",
-  "Ghizer", "Ghotki", "Gilgit", "Gojra", "Gujranwala", "Gujrat", "Gwadar",
-  "Hafizabad", "Hangu", "Haripur", "Harnai", "Haroonabad", "Hasilpur",
-  "Hattian Bala", "Haveli", "Hub", "Hunza", "Hyderabad", "Islamabad",
-  "Jacobabad", "Jamshoro", "Jampur", "Jaranwala", "Jatoi", "Jhal Magsi",
-  "Jhang", "Jhelum", "Kabirwala", "Kahror Pakka", "Kalat", "Kambar",
-  "Kamoke", "Kandhkot", "Karachi", "Karak", "Kasur", "Kashmore", "Khairpur",
-  "Khanewal", "Kharan", "Kharmang", "Khar", "Khushab", "Khuzdar", "Kohat",
-  "Kohlu", "Kohistan", "Kot Addu", "Kot Radha Kishan", "Kotli", "Lahore",
-  "Lakki Marwat", "Larkana", "Lasbela", "Layyah", "Liaquatpur", "Lodhran",
-  "Loralai", "Lower Dir", "Malakand", "Mandi Bahauddin", "Mansehra",
-  "Mardan", "Mastung", "Matiari", "Mehar", "Mian Channu", "Mianwali",
-  "Mingora", "Miranshah", "Mirpur", "Mirpur Khas", "Mirpur Sakro", "Moro",
-  "Multan", "Murree", "Musakhel", "Muzaffargarh", "Muzaffarabad",
-  "Nankana Sahib", "Narowal", "Naushahro Feroze", "Neelum", "Nowshera",
-  "Nushki", "Okara", "Pakpattan", "Panjgur", "Pano Aqil", "Parachinar",
-  "Pasrur", "Pattoki", "Peshawar", "Phalia", "Pir Mahal", "Pishin",
-  "Quetta", "Rahim Yar Khan", "Rajanpur", "Rawalakot", "Rawalpindi",
-  "Renala Khurd", "Sadiqabad", "Sahiwal", "Sanghar", "Sargodha", "Sehwan",
-  "Shaheed Benazirabad", "Shahdadkot", "Shangla", "Sheikhupura", "Sherani",
-  "Shigar", "Shikarpur", "Shorkot", "Shujaabad", "Sialkot", "Sibi",
-  "Skardu", "Sohbatpur", "South Waziristan", "Sudhnoti", "Sukkur", "Swabi",
-  "Swat", "Talagang", "Tando Adam", "Tando Allahyar",
-  "Tando Muhammad Khan", "Tank", "Taxila", "Thatta", "Toba Tek Singh",
-  "Tor Ghar", "Turbat", "Umerkot", "Upper Dir", "Usta Muhammad", "Vehari",
-  "Wah Cantonment", "Wana", "Washuk", "Wazirabad", "Zhob", "Ziarat",
+const COUNTRIES = [
+  {name:"Afghanistan",code:"AF"},{name:"Albania",code:"AL"},{name:"Algeria",code:"DZ"},
+  {name:"Argentina",code:"AR"},{name:"Armenia",code:"AM"},{name:"Australia",code:"AU"},
+  {name:"Austria",code:"AT"},{name:"Azerbaijan",code:"AZ"},{name:"Bahrain",code:"BH"},
+  {name:"Bangladesh",code:"BD"},{name:"Belarus",code:"BY"},{name:"Belgium",code:"BE"},
+  {name:"Bolivia",code:"BO"},{name:"Bosnia",code:"BA"},{name:"Brazil",code:"BR"},
+  {name:"Bulgaria",code:"BG"},{name:"Cambodia",code:"KH"},{name:"Cameroon",code:"CM"},
+  {name:"Canada",code:"CA"},{name:"Chile",code:"CL"},{name:"China",code:"CN"},
+  {name:"Colombia",code:"CO"},{name:"Croatia",code:"HR"},{name:"Cuba",code:"CU"},
+  {name:"Czech Republic",code:"CZ"},{name:"Denmark",code:"DK"},{name:"Ecuador",code:"EC"},
+  {name:"Egypt",code:"EG"},{name:"Ethiopia",code:"ET"},{name:"Finland",code:"FI"},
+  {name:"France",code:"FR"},{name:"Georgia",code:"GE"},{name:"Germany",code:"DE"},
+  {name:"Ghana",code:"GH"},{name:"Greece",code:"GR"},{name:"Guatemala",code:"GT"},
+  {name:"Honduras",code:"HN"},{name:"Hungary",code:"HU"},{name:"India",code:"IN"},
+  {name:"Indonesia",code:"ID"},{name:"Iran",code:"IR"},{name:"Iraq",code:"IQ"},
+  {name:"Ireland",code:"IE"},{name:"Israel",code:"IL"},{name:"Italy",code:"IT"},
+  {name:"Jamaica",code:"JM"},{name:"Japan",code:"JP"},{name:"Jordan",code:"JO"},
+  {name:"Kazakhstan",code:"KZ"},{name:"Kenya",code:"KE"},{name:"Kuwait",code:"KW"},
+  {name:"Kyrgyzstan",code:"KG"},{name:"Lebanon",code:"LB"},{name:"Libya",code:"LY"},
+  {name:"Lithuania",code:"LT"},{name:"Malaysia",code:"MY"},{name:"Maldives",code:"MV"},
+  {name:"Mexico",code:"MX"},{name:"Moldova",code:"MD"},{name:"Mongolia",code:"MN"},
+  {name:"Morocco",code:"MA"},{name:"Mozambique",code:"MZ"},{name:"Myanmar",code:"MM"},
+  {name:"Nepal",code:"NP"},{name:"Netherlands",code:"NL"},{name:"New Zealand",code:"NZ"},
+  {name:"Nicaragua",code:"NI"},{name:"Nigeria",code:"NG"},{name:"Norway",code:"NO"},
+  {name:"Oman",code:"OM"},{name:"Pakistan",code:"PK"},{name:"Palestine",code:"PS"},
+  {name:"Panama",code:"PA"},{name:"Paraguay",code:"PY"},{name:"Peru",code:"PE"},
+  {name:"Philippines",code:"PH"},{name:"Poland",code:"PL"},{name:"Portugal",code:"PT"},
+  {name:"Qatar",code:"QA"},{name:"Romania",code:"RO"},{name:"Russia",code:"RU"},
+  {name:"Rwanda",code:"RW"},{name:"Saudi Arabia",code:"SA"},{name:"Senegal",code:"SN"},
+  {name:"Serbia",code:"RS"},{name:"Singapore",code:"SG"},{name:"Slovakia",code:"SK"},
+  {name:"Somalia",code:"SO"},{name:"South Africa",code:"ZA"},{name:"South Korea",code:"KR"},
+  {name:"Spain",code:"ES"},{name:"Sri Lanka",code:"LK"},{name:"Sudan",code:"SD"},
+  {name:"Sweden",code:"SE"},{name:"Switzerland",code:"CH"},{name:"Syria",code:"SY"},
+  {name:"Taiwan",code:"TW"},{name:"Tajikistan",code:"TJ"},{name:"Tanzania",code:"TZ"},
+  {name:"Thailand",code:"TH"},{name:"Tunisia",code:"TN"},{name:"Turkey",code:"TR"},
+  {name:"Turkmenistan",code:"TM"},{name:"Uganda",code:"UG"},{name:"Ukraine",code:"UA"},
+  {name:"United Arab Emirates",code:"AE"},{name:"United Kingdom",code:"GB"},
+  {name:"United States",code:"US"},{name:"Uruguay",code:"UY"},{name:"Uzbekistan",code:"UZ"},
+  {name:"Venezuela",code:"VE"},{name:"Vietnam",code:"VN"},{name:"Yemen",code:"YE"},
+  {name:"Zimbabwe",code:"ZW"},
 ];
+
+const STATES_BY_COUNTRY = {
+  US: ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"],
+  CA: ["Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland and Labrador","Nova Scotia","Ontario","Prince Edward Island","Quebec","Saskatchewan"],
+  AU: ["Australian Capital Territory","New South Wales","Northern Territory","Queensland","South Australia","Tasmania","Victoria","Western Australia"],
+  IN: ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal"],
+  BR: ["Acre","Alagoas","Amapá","Amazonas","Bahia","Ceará","Espírito Santo","Goiás","Maranhão","Mato Grosso","Mato Grosso do Sul","Minas Gerais","Pará","Paraíba","Paraná","Pernambuco","Piauí","Rio de Janeiro","Rio Grande do Norte","Rio Grande do Sul","Rondônia","Roraima","Santa Catarina","São Paulo","Sergipe","Tocantins"],
+  MX: ["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Guanajuato","Guerrero","Hidalgo","Jalisco","México","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"],
+  PK: ["Azad Kashmir","Balochistan","Gilgit-Baltistan","Islamabad Capital Territory","Khyber Pakhtunkhwa","Punjab","Sindh"],
+  AE: ["Abu Dhabi","Ajman","Dubai","Fujairah","Ras Al Khaimah","Sharjah","Umm Al Quwain"],
+  MY: ["Johor","Kedah","Kelantan","Kuala Lumpur","Labuan","Melaka","Negeri Sembilan","Pahang","Penang","Perak","Perlis","Putrajaya","Sabah","Sarawak","Selangor","Terengganu"],
+  NG: ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"],
+  ZA: ["Eastern Cape","Free State","Gauteng","KwaZulu-Natal","Limpopo","Mpumalanga","North West","Northern Cape","Western Cape"],
+  DE: ["Baden-Württemberg","Bavaria","Berlin","Brandenburg","Bremen","Hamburg","Hesse","Lower Saxony","Mecklenburg-Vorpommern","North Rhine-Westphalia","Rhineland-Palatinate","Saarland","Saxony","Saxony-Anhalt","Schleswig-Holstein","Thuringia"],
+  AR: ["Buenos Aires","Catamarca","Chaco","Chubut","Córdoba","Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones","Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe","Santiago del Estero","Tierra del Fuego","Tucumán"],
+  SA: ["Asir","Al Bahah","Al Jawf","Al Madinah","Al Qassim","Eastern Province","Ha'il","Jizan","Mecca","Najran","Northern Borders","Riyadh","Tabuk"],
+  ID: ["Aceh","Bali","Bangka Belitung","Banten","Bengkulu","Central Java","Central Kalimantan","Central Sulawesi","East Java","East Kalimantan","East Nusa Tenggara","Gorontalo","Jakarta","Jambi","Lampung","Maluku","North Kalimantan","North Maluku","North Sulawesi","North Sumatra","Papua","Riau","Riau Islands","South Kalimantan","South Sulawesi","South Sumatra","Southeast Sulawesi","West Java","West Kalimantan","West Nusa Tenggara","West Papua","West Sulawesi","West Sumatra","Yogyakarta"],
+};
 
 const SIDEBAR_W = 260;
 const COLLAPSED_W = 56;
@@ -121,8 +144,9 @@ function HamburgerLines() {
 
 function formatPhone(phone) {
   if (!phone) return "—";
-  if (phone.startsWith("+92")) return `+92 | ${phone.slice(3)}`;
-  return phone;
+  // Show as dialCode | localNumber if the number starts with a known dial code
+  const match = phone.match(/^(\+\d{1,4})(\d+)$/);
+  return match ? `${match[1]} | ${match[2]}` : phone;
 }
 
 function CustomSelect({ value, onChange, options }) {
@@ -769,15 +793,20 @@ export default function UserDetail() {
   }, [id]);
 
   function initForm(u) {
+    const storedCode = u.countryCode || "PK";
+    const countryEntry = COUNTRIES.find((c) => c.code === storedCode) || { name: "Pakistan", code: "PK" };
     setForm({
       name: u.name || "",
       phone: u.phone || "",
       gender: u.gender || "",
       cnic: u.cnic || "",
+      country: countryEntry.name,
+      countryCode: countryEntry.code,
+      state: u.address?.state || "",
       street: u.address?.street || "",
       city: u.address?.city || "",
       zip: u.address?.zip || "",
-      category: u.category || (Array.isArray(u.categories) ? u.categories[0] : "") || "",
+      categories: Array.isArray(u.categories) ? u.categories : (u.category ? [u.category] : []),
       about: u.about || "",
       profileImage: u.profileImage || "",
       cnicFrontImage: u.cnicFrontImage || "",
@@ -1179,6 +1208,29 @@ export default function UserDetail() {
                 type="tel"
               />
               <InfoRow
+                label="Country"
+                value={COUNTRIES.find((c) => c.code === (user.countryCode || "PK"))?.name || user.address?.country || "Pakistan"}
+                editMode={editMode}
+                inputValue={form.country}
+                onChange={(name) => {
+                  const entry = COUNTRIES.find((c) => c.name === name) || { name, code: "" };
+                  setForm((prev) => ({ ...prev, country: entry.name, countryCode: entry.code, state: "" }));
+                }}
+                options={COUNTRIES.map((c) => c.name)}
+                searchable
+              />
+              {(STATES_BY_COUNTRY[form.countryCode || "PK"] || []).length > 0 && (
+                <InfoRow
+                  label="State / Province"
+                  value={user.address?.state || "—"}
+                  editMode={editMode}
+                  inputValue={form.state}
+                  onChange={f("state")}
+                  options={STATES_BY_COUNTRY[form.countryCode] || []}
+                  searchable
+                />
+              )}
+              <InfoRow
                 label="Address"
                 value={user.address?.street}
                 editMode={editMode}
@@ -1191,8 +1243,6 @@ export default function UserDetail() {
                 editMode={editMode}
                 inputValue={form.city}
                 onChange={f("city")}
-                options={PAKISTAN_CITIES}
-                searchable
               />
               <InfoRow
                 label="Postal Code"
@@ -1202,7 +1252,7 @@ export default function UserDetail() {
                 onChange={f("zip")}
               />
               <InfoRow
-                label="CNIC"
+                label="National ID"
                 value={user.cnic}
                 editMode={editMode}
                 inputValue={form.cnic}
@@ -1290,14 +1340,65 @@ export default function UserDetail() {
                 )}
               </div>}
               {isProvider && (
-                <InfoRow
-                  label="Category"
-                  value={user.category || (Array.isArray(user.categories) ? user.categories[0] : undefined)}
-                  editMode={editMode}
-                  inputValue={form.category}
-                  onChange={f("category")}
-                  options={PROVIDER_CATEGORIES}
-                />
+                <div style={{
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  padding: "clamp(10px,1vw,14px) 0",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "clamp(12px,1.2vw,20px)",
+                }}>
+                  <span style={{
+                    fontFamily: GEIST,
+                    fontWeight: 400,
+                    fontSize: "clamp(10px,0.83vw,12px)",
+                    lineHeight: "100%",
+                    color: "rgba(255,255,255,0.55)",
+                    flexShrink: 0,
+                    width: "clamp(100px,12vw,150px)",
+                    paddingTop: 4,
+                  }}>Categories</span>
+                  <div style={{ width: 1, minHeight: 14, background: "rgba(255,255,255,0.15)", flexShrink: 0, marginTop: 4 }} />
+                  {editMode ? (
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: (form.categories || []).length ? 8 : 0 }}>
+                        {(form.categories || []).map((cat) => (
+                          <span key={cat} style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: "rgba(254,89,0,0.18)", border: "1px solid rgba(254,89,0,0.6)",
+                            borderRadius: 200, padding: "4px 10px",
+                            fontFamily: GEIST, fontSize: 12, color: "#fff",
+                          }}>
+                            {cat}
+                            <button type="button" onClick={() => f("categories")((form.categories || []).filter((c) => c !== cat))}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.7)", padding: 0, lineHeight: 1, fontSize: 13 }}>×</button>
+                          </span>
+                        ))}
+                      </div>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v && !(form.categories || []).includes(v))
+                            f("categories")([...(form.categories || []), v]);
+                        }}
+                        style={{
+                          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)",
+                          borderRadius: 6, padding: "6px 10px", fontFamily: GEIST,
+                          fontSize: "clamp(10px,0.83vw,13px)", color: "#fff", outline: "none", width: "100%",
+                        }}
+                      >
+                        <option value="" style={{ background: "#1a2a40" }}>— Add category —</option>
+                        {PROVIDER_CATEGORIES.filter((c) => !(form.categories || []).includes(c)).map((c) => (
+                          <option key={c} value={c} style={{ background: "#1a2a40" }}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <span style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(10px,0.83vw,13px)", lineHeight: "24px", color: "#8E8E8E", flex: 1 }}>
+                      {(Array.isArray(user.categories) && user.categories.length ? user.categories : user.category ? [user.category] : []).join(", ") || "—"}
+                    </span>
+                  )}
+                </div>
               )}
               {isProvider && !editMode && user.latitude != null && user.longitude != null && (
                 <div

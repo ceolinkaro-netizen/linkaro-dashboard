@@ -83,8 +83,9 @@ export default function SubscriptionManagement() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, typeFilter]);
 
   function fetchData(isRefresh = false) {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -101,9 +102,10 @@ export default function SubscriptionManagement() {
   const filtered = subscriptions.filter((row) => {
     const nameMatch = (row.user?.name || "").toLowerCase().includes(search.toLowerCase());
     const isBadge = (row.subscriptionType || "").toLowerCase().includes("badge");
+    const typeMatch = typeFilter === "all" || (typeFilter === "badge" ? isBadge : !isBadge);
     const statusValue = (isBadge ? row.user?.badgeSubscriptionStatus : row.user?.subscriptionStatus) || "pending";
     const statusMatch = statusFilter === "all" || statusValue.toLowerCase() === statusFilter;
-    return nameMatch && statusMatch;
+    return nameMatch && typeMatch && statusMatch;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -286,27 +288,24 @@ export default function SubscriptionManagement() {
         {/* Filters */}
         <div
           style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: "clamp(14px, 1.4vw, 20px)",
+            marginBottom: "clamp(14px, 1.4vw, 20px)",
             display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "clamp(8px, 0.8vw, 12px)",
-            marginBottom: "clamp(12px, 1.2vw, 18px)",
+            flexDirection: "column",
+            gap: "clamp(12px, 1.2vw, 16px)",
           }}
         >
-          {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 180px", maxWidth: 280 }}>
+          {/* Search row */}
+          <div style={{ position: "relative", maxWidth: 340 }}>
             <img
               src="/search-icon.png"
               alt=""
               style={{
-                position: "absolute",
-                left: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: 14,
-                height: 14,
-                opacity: 0.4,
-                pointerEvents: "none",
+                position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                width: 14, height: 14, opacity: 0.4, pointerEvents: "none",
               }}
             />
             <input
@@ -315,44 +314,160 @@ export default function SubscriptionManagement() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
-                width: "100%",
-                boxSizing: "border-box",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.15)",
+                width: "100%", boxSizing: "border-box",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 8,
-                padding: "clamp(7px, 0.65vw, 10px) clamp(10px, 1vw, 14px) clamp(7px, 0.65vw, 10px) 32px",
-                fontFamily: GEIST,
-                fontSize: "clamp(10px, 0.8vw, 12px)",
-                color: "#ffffff",
-                outline: "none",
+                padding: "clamp(8px, 0.7vw, 11px) clamp(12px, 1vw, 16px) clamp(8px, 0.7vw, 11px) 36px",
+                fontFamily: GEIST, fontSize: "clamp(11px, 0.9vw, 13px)",
+                color: "#ffffff", outline: "none",
               }}
             />
           </div>
 
-          {/* Status pills */}
-          <div style={{ display: "flex", gap: "clamp(4px, 0.5vw, 8px)", flexWrap: "wrap" }}>
-            {["all", "pending", "active", "rejected", "fraud"].map((s) => (
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(255,255,255,0.07)" }} />
+
+          {/* Two filter groups side by side */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(16px, 1.8vw, 28px)", alignItems: "flex-start" }}>
+
+            {/* Plan Type */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{
+                fontFamily: GEIST, fontWeight: 500, fontSize: "clamp(9px, 0.72vw, 11px)",
+                color: "rgba(255,255,255,0.45)", letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                Plan Type
+              </span>
+              <div style={{ display: "flex", gap: "clamp(5px, 0.5vw, 8px)", flexWrap: "wrap" }}>
+                {[
+                  { key: "all", label: "All Plans" },
+                  { key: "basic", label: "Basic Pro Plan" },
+                  { key: "badge", label: "Verified Badge" },
+                ].map(({ key, label }) => {
+                  const active = typeFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setTypeFilter(key)}
+                      style={{
+                        fontFamily: GEIST,
+                        fontSize: "clamp(10px, 0.8vw, 12px)",
+                        fontWeight: active ? 600 : 400,
+                        padding: "clamp(5px, 0.5vw, 7px) clamp(12px, 1.1vw, 18px)",
+                        borderRadius: 50,
+                        border: active ? "none" : "1px solid rgba(255,255,255,0.15)",
+                        background: active ? "#0A74EC" : "rgba(255,255,255,0.05)",
+                        color: "#ffffff",
+                        cursor: "pointer",
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Vertical divider */}
+            <div style={{ width: 1, background: "rgba(255,255,255,0.07)", alignSelf: "stretch", minHeight: 32 }} />
+
+            {/* Status */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{
+                fontFamily: GEIST, fontWeight: 500, fontSize: "clamp(9px, 0.72vw, 11px)",
+                color: "rgba(255,255,255,0.45)", letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                Status
+              </span>
+              <div style={{ display: "flex", gap: "clamp(5px, 0.5vw, 8px)", flexWrap: "wrap" }}>
+                {[
+                  { key: "all", label: "All" },
+                  { key: "pending", label: "Pending" },
+                  { key: "active", label: "Active" },
+                  { key: "rejected", label: "Rejected" },
+                  { key: "fraud", label: "Fraud" },
+                ].map(({ key, label }) => {
+                  const active = statusFilter === key;
+                  const dotColor = {
+                    pending: "#FFB800", active: "#14CA74", rejected: "#FF4D4D", fraud: "#FF4D4D",
+                  }[key];
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setStatusFilter(key)}
+                      style={{
+                        fontFamily: GEIST,
+                        fontSize: "clamp(10px, 0.8vw, 12px)",
+                        fontWeight: active ? 600 : 400,
+                        padding: "clamp(5px, 0.5vw, 7px) clamp(12px, 1.1vw, 18px)",
+                        borderRadius: 50,
+                        border: active ? "none" : "1px solid rgba(255,255,255,0.15)",
+                        background: active ? ORANGE : "rgba(255,255,255,0.05)",
+                        color: "#ffffff",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                    >
+                      {dotColor && !active && (
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+                      )}
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Active filter summary + clear */}
+          {(typeFilter !== "all" || statusFilter !== "all") && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)", color: "rgba(255,255,255,0.4)" }}>
+                Filtering by:
+              </span>
+              {typeFilter !== "all" && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  background: "rgba(10,116,236,0.18)", border: "1px solid rgba(10,116,236,0.35)",
+                  borderRadius: 50, padding: "3px 10px 3px 12px",
+                  fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)", color: "#6FB8FF",
+                }}>
+                  {typeFilter === "badge" ? "Verified Badge" : "Basic Pro Plan"}
+                  <button type="button" onClick={() => setTypeFilter("all")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6FB8FF", padding: 0, lineHeight: 1, fontSize: 12, display: "flex" }}>✕</button>
+                </span>
+              )}
+              {statusFilter !== "all" && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  background: "rgba(254,89,0,0.15)", border: "1px solid rgba(254,89,0,0.35)",
+                  borderRadius: 50, padding: "3px 10px 3px 12px",
+                  fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)", color: "#FFA07A",
+                }}>
+                  {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                  <button type="button" onClick={() => setStatusFilter("all")} style={{ background: "none", border: "none", cursor: "pointer", color: "#FFA07A", padding: 0, lineHeight: 1, fontSize: 12, display: "flex" }}>✕</button>
+                </span>
+              )}
               <button
-                key={s}
                 type="button"
-                onClick={() => setStatusFilter(s)}
+                onClick={() => { setTypeFilter("all"); setStatusFilter("all"); setSearch(""); }}
                 style={{
-                  fontFamily: GEIST,
-                  fontSize: "clamp(9px, 0.75vw, 11px)",
-                  fontWeight: statusFilter === s ? 600 : 400,
-                  padding: "clamp(5px, 0.5vw, 8px) clamp(10px, 1vw, 16px)",
-                  borderRadius: 50,
-                  border: statusFilter === s ? "none" : "1px solid rgba(255,255,255,0.2)",
-                  background: statusFilter === s ? ORANGE : "transparent",
-                  color: "#ffffff",
-                  cursor: "pointer",
-                  textTransform: "capitalize",
+                  background: "none", border: "none", cursor: "pointer",
+                  fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)",
+                  color: "rgba(255,255,255,0.35)", padding: 0, textDecoration: "underline",
                 }}
               >
-                {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+                Clear all
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Table container */}
