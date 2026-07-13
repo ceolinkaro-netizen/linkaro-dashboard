@@ -631,6 +631,34 @@ function ImageLightbox({ src, onClose }) {
 function CnicImageBox({ label, src, editMode, onChange, onPreview }) {
   const ref = useRef();
   const [hovered, setHovered] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e) {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await apiFetch("/admin/upload-image", {
+        method: "POST",
+        body: JSON.stringify({ image: dataUrl, folder: "cnic" }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.message || "Upload failed");
+      onChange(data.url);
+    } catch (err) {
+      console.error("CNIC upload failed:", err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <p
@@ -684,13 +712,13 @@ function CnicImageBox({ label, src, editMode, onChange, onPreview }) {
           <>
             <button
               type="button"
-              onClick={() => ref.current.click()}
+              onClick={() => !uploading && ref.current.click()}
               style={{
                 position: "absolute",
                 inset: 0,
                 background: "rgba(0,0,0,0.45)",
                 border: "none",
-                cursor: "pointer",
+                cursor: uploading ? "default" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -699,20 +727,14 @@ function CnicImageBox({ label, src, editMode, onChange, onPreview }) {
                 fontSize: "clamp(9px, 0.7vw, 11px)",
               }}
             >
-              Click to change
+              {uploading ? "Uploading..." : "Click to change"}
             </button>
             <input
               ref={ref}
               type="file"
               accept="image/*"
               style={{ display: "none" }}
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => onChange(reader.result);
-                reader.readAsDataURL(file);
-              }}
+              onChange={handleFile}
             />
           </>
         ) : src ? (
@@ -757,6 +779,7 @@ export default function UserDetail() {
   const [previewSrc, setPreviewSrc] = useState(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [regStatusConfirm, setRegStatusConfirm] = useState(false);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
   const profileInputRef = useRef();
 
   async function confirmToggleRegistrationStatus() {
@@ -1112,7 +1135,8 @@ export default function UserDetail() {
                     <>
                       <button
                         type="button"
-                        onClick={() => profileInputRef.current.click()}
+                        onClick={() => !profileImageUploading && profileInputRef.current.click()}
+                        title={profileImageUploading ? "Uploading..." : "Change photo"}
                         style={{
                           position: "absolute",
                           bottom: 4,
@@ -1120,9 +1144,9 @@ export default function UserDetail() {
                           width: "clamp(22px, 2vw, 28px)",
                           height: "clamp(22px, 2vw, 28px)",
                           borderRadius: "50%",
-                          background: ORANGE,
+                          background: profileImageUploading ? "rgba(255,255,255,0.3)" : ORANGE,
                           border: "none",
-                          cursor: "pointer",
+                          cursor: profileImageUploading ? "default" : "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -1135,6 +1159,7 @@ export default function UserDetail() {
                             width: 11,
                             height: 11,
                             filter: "brightness(0) invert(1)",
+                            opacity: profileImageUploading ? 0.4 : 1,
                           }}
                           onError={(e) => {
                             e.target.style.display = "none";
@@ -1146,16 +1171,30 @@ export default function UserDetail() {
                         type="file"
                         accept="image/*"
                         style={{ display: "none" }}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files[0];
+                          e.target.value = "";
                           if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = () =>
-                            setForm((prev) => ({
-                              ...prev,
-                              profileImage: reader.result,
-                            }));
-                          reader.readAsDataURL(file);
+                          setProfileImageUploading(true);
+                          try {
+                            const dataUrl = await new Promise((resolve, reject) => {
+                              const reader = new FileReader();
+                              reader.onload = () => resolve(reader.result);
+                              reader.onerror = reject;
+                              reader.readAsDataURL(file);
+                            });
+                            const res = await apiFetch("/admin/upload-image", {
+                              method: "POST",
+                              body: JSON.stringify({ image: dataUrl, folder: "profiles" }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok || !data.url) throw new Error(data.message || "Upload failed");
+                            setForm((prev) => ({ ...prev, profileImage: data.url }));
+                          } catch (err) {
+                            console.error("Profile image upload failed:", err.message);
+                          } finally {
+                            setProfileImageUploading(false);
+                          }
                         }}
                       />
                     </>
