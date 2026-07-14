@@ -45,13 +45,11 @@ function planPricePkr(subscriptionType) {
   return isBadgePlan(subscriptionType) ? PLAN_PRICE_PKR.badge : PLAN_PRICE_PKR.basic;
 }
 
-const DEVICE_DATA = [
-  { label: "Desktop users", value: 15624, color: ORANGE },
-  { label: "Android users", value: 5546, color: BLUE },
-  { label: "Apple Users", value: 2478, color: LIGHT_BLUE },
+const DEVICE_LABELS = [
+  { key: "web",     label: "Desktop users", color: ORANGE },
+  { key: "android", label: "Android users", color: BLUE },
+  { key: "ios",     label: "Apple Users",   color: LIGHT_BLUE },
 ];
-
-const DEVICE_TOTAL = DEVICE_DATA.reduce((sum, d) => sum + d.value, 0);
 
 const RANGE_OPTIONS = [
   { value: "12m", label: "12 months", months: 12 },
@@ -342,7 +340,7 @@ function PaymentFilterDropdown({ value, onChange }) {
   );
 }
 
-function DeviceGauge() {
+function DeviceGauge({ data }) {
   const width = 220;
   const r = 90;
   const pad = 10;
@@ -350,24 +348,25 @@ function DeviceGauge() {
   const cy = r + pad;
   const height = r + pad + 10;
 
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+
   const polar = (angleDeg) => {
     const rad = (angleDeg * Math.PI) / 180;
     return [cx + r * Math.cos(rad), cy - r * Math.sin(rad)];
   };
 
-  // Each device's slice of the half-circle is proportional to its share of
-  // the total, drawn as its own solid-color arc picking up where the
-  // previous one ended — orange (desktop) -> blue (android) -> light blue (apple).
   let angle = 180;
-  const segments = DEVICE_DATA.map((d) => {
-    const sweep = (d.value / DEVICE_TOTAL) * 180;
-    const start = angle;
-    const end = angle - sweep;
-    angle = end;
-    const [sx, sy] = polar(start);
-    const [ex, ey] = polar(end);
-    return { ...d, path: `M ${sx} ${sy} A ${r} ${r} 0 0 1 ${ex} ${ey}` };
-  });
+  const segments = total === 0
+    ? [{ label: "empty", color: "rgba(255,255,255,0.1)", path: `M ${polar(180)[0]} ${polar(180)[1]} A ${r} ${r} 0 0 1 ${polar(0)[0]} ${polar(0)[1]}` }]
+    : data.map((d) => {
+        const sweep = (d.value / total) * 180;
+        const start = angle;
+        const end = angle - sweep;
+        angle = end;
+        const [sx, sy] = polar(start);
+        const [ex, ey] = polar(end);
+        return { ...d, path: `M ${sx} ${sy} A ${r} ${r} 0 0 1 ${ex} ${ey}` };
+      });
 
   return (
     <div style={{ position: "relative", width, height, margin: "0 auto" }}>
@@ -393,7 +392,7 @@ function DeviceGauge() {
         }}
       >
         <div style={{ fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(20px, 1.8vw, 26px)", color: "#ffffff" }}>
-          {DEVICE_TOTAL.toLocaleString()}
+          {total.toLocaleString()}
         </div>
         <div style={{ fontFamily: GEIST, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Users by device</div>
       </div>
@@ -413,6 +412,7 @@ export default function AdminDashboard() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingSubs, setLoadingSubs] = useState(true);
+  const [deviceStats, setDeviceStats] = useState({ web: 0, android: 0, ios: 0 });
 
   useEffect(() => {
     apiFetch("/admin/get-users")
@@ -425,6 +425,17 @@ export default function AdminDashboard() {
       })
       .finally(() => setLoadingUsers(false));
   }, []);
+
+  useEffect(() => {
+    apiFetch("/admin/get-device-stats")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setDeviceStats({ web: data.web, android: data.android, ios: data.ios });
+      })
+      .catch(() => {});
+  }, []);
+
+  const deviceData = DEVICE_LABELS.map((d) => ({ ...d, value: deviceStats[d.key] ?? 0 }));
 
   useEffect(() => {
     apiFetch("/admin/get-subscriptions")
@@ -808,9 +819,9 @@ export default function AdminDashboard() {
         <div className="dash-bottom-grid">
           {/* Device gauge */}
           <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "clamp(16px, 1.6vw, 24px)" }}>
-            <DeviceGauge />
+            <DeviceGauge data={deviceData} />
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
-              {DEVICE_DATA.map((d) => (
+              {deviceData.map((d) => (
                 <div key={d.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: GEIST, fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: d.color, display: "inline-block" }} />
