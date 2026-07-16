@@ -554,7 +554,7 @@ export default function SubscriptionTicketDetails() {
               <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 1vw, 14px)" }}>
                 <button
                   type="button"
-                  onClick={() => router.push("/admin/subscription-management")}
+                  onClick={() => router.back()}
                   style={{
                     width: "clamp(32px, 2.5vw, 38px)",
                     height: "clamp(32px, 2.5vw, 38px)",
