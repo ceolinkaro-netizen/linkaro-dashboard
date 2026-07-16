@@ -1,25 +1,31 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { apiFetch } from "@/lib/api";
 
-// The dashboard (Vercel) and the API (Render) are on unrelated domains, so
-// the session cookie set by the backend is never visible to this app's own
-// requests — an edge-middleware cookie check can't work here. Auth is
-// instead verified client-side by asking the backend directly.
 const PUBLIC_PATHS = ["/", "/privacy-policy", "/terms-of-services"];
 
-// Roles other than "admin" are confined to a single page of the dashboard.
 const ROLE_HOME = {
   "user manager": "/admin/user-management",
   "ticket manager": "/ticket-management",
 };
 
-const AuthContext = createContext({ role: null, name: null, loading: true });
+// Paths every authenticated role can access (in addition to their ROLE_HOME)
+const SHARED_ALLOWED_PATHS = ["/settings/profile"];
+
+const AuthContext = createContext({
+  role: null,
+  name: null,
+  profileImage: null,
+  setName: () => {},
+  setProfileImage: () => {},
+  loading: true,
+});
 
 export function AuthProvider({ children }) {
   const router = useRouter();
   const [role, setRole] = useState(null);
   const [name, setName] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,11 +48,12 @@ export function AuthProvider({ children }) {
 
         setRole(data.role);
         setName(data.name || null);
+        setProfileImage(data.profileImage || null);
 
         const home = ROLE_HOME[data.role];
-        if (home && router.pathname !== home) {
+        if (home && router.pathname !== home && !SHARED_ALLOWED_PATHS.includes(router.pathname)) {
           router.replace(home);
-          return; // stay "loading" — the new route's own effect will resolve
+          return;
         }
 
         setLoading(false);
@@ -54,7 +61,6 @@ export function AuthProvider({ children }) {
       .catch(() => {
         if (cancelled) return;
         router.replace("/");
-        // stay "loading" until the redirect actually lands on "/"
       });
 
     return () => {
@@ -65,7 +71,7 @@ export function AuthProvider({ children }) {
   const isPublic = PUBLIC_PATHS.includes(router.pathname);
 
   return (
-    <AuthContext.Provider value={{ role, name, loading }}>
+    <AuthContext.Provider value={{ role, name, profileImage, setName, setProfileImage, loading }}>
       {isPublic || !loading ? children : null}
     </AuthContext.Provider>
   );

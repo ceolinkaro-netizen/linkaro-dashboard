@@ -413,6 +413,8 @@ export default function AdminDashboard() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [deviceStats, setDeviceStats] = useState({ web: 0, android: 0, ios: 0 });
+  const [subscriptionRequired, setSubscriptionRequired] = useState(true);
+  const [togglingSubscription, setTogglingSubscription] = useState(false);
 
   useEffect(() => {
     apiFetch("/admin/get-users")
@@ -425,6 +427,24 @@ export default function AdminDashboard() {
       })
       .finally(() => setLoadingUsers(false));
   }, []);
+
+  useEffect(() => {
+    apiFetch("/admin/get-settings")
+      .then((r) => r.json())
+      .then((data) => { if (data.success) setSubscriptionRequired(data.subscriptionRequired); })
+      .catch(() => {});
+  }, []);
+
+  async function handleToggleSubscription() {
+    if (togglingSubscription) return;
+    setTogglingSubscription(true);
+    try {
+      const r = await apiFetch("/admin/toggle-subscription-required", { method: "POST" });
+      const data = await r.json();
+      if (data.success) setSubscriptionRequired(data.subscriptionRequired);
+    } catch (_) {}
+    setTogglingSubscription(false);
+  }
 
   useEffect(() => {
     apiFetch("/admin/get-device-stats")
@@ -615,7 +635,61 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "clamp(8px, 0.8vw, 12px)", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "clamp(8px, 0.8vw, 12px)", flexWrap: "wrap", alignItems: "center" }}>
+            {/* Subscription Required toggle */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 50,
+                padding: "clamp(7px, 0.65vw, 10px) clamp(14px, 1.3vw, 20px)",
+                fontFamily: GEIST,
+                fontSize: "clamp(10px, 0.83vw, 12px)",
+                color: "rgba(255,255,255,0.7)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span>Subscription</span>
+              <button
+                type="button"
+                onClick={handleToggleSubscription}
+                disabled={togglingSubscription}
+                style={{
+                  position: "relative",
+                  width: 36,
+                  height: 20,
+                  borderRadius: 10,
+                  border: "none",
+                  background: subscriptionRequired ? ORANGE : "rgba(255,255,255,0.18)",
+                  cursor: togglingSubscription ? "not-allowed" : "pointer",
+                  transition: "background 0.2s",
+                  flexShrink: 0,
+                  padding: 0,
+                }}
+                title={subscriptionRequired ? "Subscription required — click to disable" : "Subscription disabled — click to enable"}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 3,
+                    left: subscriptionRequired ? "calc(100% - 17px)" : 3,
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: "#ffffff",
+                    transition: "left 0.2s",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
+                  }}
+                />
+              </button>
+              <span style={{ color: subscriptionRequired ? ORANGE : "rgba(255,255,255,0.4)", minWidth: 40 }}>
+                {subscriptionRequired ? "On" : "Off"}
+              </span>
+            </div>
+
             <button
               type="button"
               style={{

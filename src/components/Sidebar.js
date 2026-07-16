@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,17 +9,47 @@ const ORANGE = "#FE5900";
 const GEIST = "'Geist', sans-serif";
 const PP_MORI = "'PP Mori', sans-serif";
 
-const navItems = [
-  { label: "Dashboard", icon: "/dashboard-icon.svg", href: "/admin/dashboard" },
-  { label: "User Management", icon: "/user-icon.svg", href: "/admin/user-management" },
-  { label: "Job Post Management", icon: "/job-icon.svg", href: "/job-post-management" },
-  { label: "Notifications", icon: "/notifcation-icon.svg", href: "/notifications" },
-  { label: "Ticket Management", icon: "/ticket-icon.svg", href: "/ticket-management" },
-  { label: "Subscription Management", icon: "/sub-icon.svg", href: "/admin/subscription-management" },
-  { label: "Dashboard Manager", icon: "/dash-manager-icon.svg", href: "/dashboard-manager" },
+const SUB_MGMT_HREF = "/admin/subscription-management";
+const SUB_CHILDREN = [
+  { label: "Basic Pro Plan", href: "/subscription-management/basic-pro-plan" },
+  { label: "Verified Badge", href: "/subscription-management/verified-badge" },
 ];
 
-// Roles other than "admin" only ever see the one page they're scoped to.
+const navItems = [
+  { label: "Dashboard", icon: "/dashboard-icon.svg", href: "/admin/dashboard" },
+  {
+    label: "User Management",
+    icon: "/user-icon.svg",
+    href: "/admin/user-management",
+  },
+  {
+    label: "Job Post Management",
+    icon: "/job-icon.svg",
+    href: "/job-post-management",
+  },
+  {
+    label: "Notifications",
+    icon: "/notifcation-icon.svg",
+    href: "/notifications",
+  },
+  {
+    label: "Ticket Management",
+    icon: "/ticket-icon.svg",
+    href: "/ticket-management",
+  },
+  {
+    label: "Subscription Management",
+    icon: "/sub-icon.svg",
+    href: SUB_MGMT_HREF,
+    children: SUB_CHILDREN,
+  },
+  {
+    label: "Dashboard Manager",
+    icon: "/dash-manager-icon.svg",
+    href: "/dashboard-manager",
+  },
+];
+
 const ROLE_VISIBLE_HREFS = {
   "user manager": ["/admin/user-management"],
   "ticket manager": ["/ticket-management"],
@@ -41,56 +72,46 @@ function NavIcon({ src, isActive }) {
   );
 }
 
-function NavLink({ item, isActive }) {
-  return (
-    <Link
-      href={item.href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "clamp(8px, 0.8vw, 12px)",
-        padding: "clamp(11px, 1vw, 14px) 16px clamp(11px, 1vw, 14px) 20px",
-        textDecoration: "none",
-        color: isActive ? ORANGE : "rgba(255,255,255,0.7)",
-        borderRight: `3px solid ${isActive ? ORANGE : "transparent"}`,
-        transition: "color 0.15s",
-      }}
-    >
-      <NavIcon src={item.icon} isActive={isActive} />
-      <span
-        style={{
-          fontFamily: PP_MORI,
-          fontWeight: 600,
-          fontSize: "clamp(11px, 0.97vw, 14px)",
-          lineHeight: "23px",
-          letterSpacing: "-0.02em",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {item.label}
-      </span>
-    </Link>
-  );
-}
-
 export default function Sidebar({ isOpen, onToggle }) {
   const router = useRouter();
-  const settingsActive = router.pathname === "/settings";
-  const { role, name } = useAuth();
+  const { role, name, profileImage } = useAuth();
   const displayName = name || "John";
+
+  const [subOpen, setSubOpen] = useState(
+    SUB_CHILDREN.some((c) => router.pathname === c.href),
+  );
 
   const visibleHrefs = ROLE_VISIBLE_HREFS[role];
   const visibleNavItems = visibleHrefs
     ? navItems.filter((item) => visibleHrefs.includes(item.href))
     : navItems;
-  const isRestrictedRole = Boolean(visibleHrefs);
 
   async function handleLogout() {
     await apiFetch("/auth/logout", { method: "POST" });
     router.push("/");
   }
+
+  const linkStyle = (isActive) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "clamp(8px, 0.8vw, 12px)",
+    padding: "clamp(11px, 1vw, 14px) 16px clamp(11px, 1vw, 14px) 20px",
+    textDecoration: "none",
+    color: isActive ? ORANGE : "rgba(255,255,255,0.7)",
+    borderRight: `3px solid ${isActive ? ORANGE : "transparent"}`,
+    transition: "color 0.15s",
+  });
+
+  const labelStyle = {
+    fontFamily: PP_MORI,
+    fontWeight: 600,
+    fontSize: "clamp(11px, 0.97vw, 14px)",
+    lineHeight: "23px",
+    letterSpacing: "-0.02em",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  };
 
   return (
     <aside
@@ -106,10 +127,10 @@ export default function Sidebar({ isOpen, onToggle }) {
         zIndex: 100,
         transform: isOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.3s ease",
-        boxShadow: "6px 0 32px rgba(0, 0, 0, 0.7)",
+        boxShadow: "6px 0 32px rgba(0,0,0,0.7)",
       }}
     >
-      {/* Logo + collapse button */}
+      {/* Logo + collapse */}
       <div
         style={{
           display: "flex",
@@ -120,7 +141,7 @@ export default function Sidebar({ isOpen, onToggle }) {
         }}
       >
         <Image
-          src="/logo.png"
+          src="/logo3.png"
           alt="Linkaro"
           width={155}
           height={78}
@@ -178,7 +199,8 @@ export default function Sidebar({ isOpen, onToggle }) {
               background: "rgba(255,255,255,0.15)",
               border: "none",
               borderRadius: "200px",
-              padding: "clamp(8px, 0.7vw, 10px) 16px clamp(8px, 0.7vw, 10px) 46px",
+              padding:
+                "clamp(8px, 0.7vw, 10px) 16px clamp(8px, 0.7vw, 10px) 46px",
               color: "#ffffff",
               fontFamily: GEIST,
               fontWeight: 400,
@@ -191,15 +213,126 @@ export default function Sidebar({ isOpen, onToggle }) {
         </div>
       </div>
 
-      {/* Nav items */}
-      <nav className="sidebar-nav" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        {visibleNavItems.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            isActive={router.pathname === item.href}
-          />
-        ))}
+      {/* Nav */}
+      <nav
+        className="sidebar-nav"
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}
+      >
+        {visibleNavItems.map((item) => {
+          const isActive =
+            router.pathname === item.href ||
+            (item.children &&
+              item.children.some((c) => router.pathname === c.href));
+
+          if (item.children) {
+            return (
+              <div key={item.href}>
+                {/* Parent row — toggles submenu, no navigation */}
+                <button
+                  type="button"
+                  onClick={() => setSubOpen((v) => !v)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "clamp(8px, 0.8vw, 12px)",
+                    width: "100%",
+                    padding:
+                      "clamp(11px, 1vw, 14px) 16px clamp(11px, 1vw, 14px) 20px",
+                    background: "none",
+                    border: "none",
+                    borderRight: `3px solid ${isActive ? ORANGE : "transparent"}`,
+                    cursor: "pointer",
+                    color: isActive ? ORANGE : "rgba(255,255,255,0.7)",
+                    textAlign: "left",
+                    transition: "color 0.15s",
+                  }}
+                >
+                  <NavIcon src={item.icon} isActive={isActive} />
+                  <span style={{ ...labelStyle, flex: 1 }}>{item.label}</span>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    style={{
+                      flexShrink: 0,
+                      transition: "transform 0.2s",
+                      transform: subOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      marginRight: 4,
+                    }}
+                  >
+                    <path
+                      d="M2 4L6 8L10 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                {/* Sub-items */}
+                {subOpen && (
+                  <div style={{ paddingLeft: 20 }}>
+                    {item.children.map((child) => {
+                      const childActive = router.pathname === child.href;
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding:
+                              "clamp(9px, 0.85vw, 12px) 16px clamp(9px, 0.85vw, 12px) 12px",
+                            textDecoration: "none",
+                            color: childActive
+                              ? ORANGE
+                              : "rgba(255,255,255,0.6)",
+                            borderRight: `3px solid ${childActive ? ORANGE : "transparent"}`,
+                            transition: "color 0.15s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: "50%",
+                              background: childActive
+                                ? ORANGE
+                                : "rgba(255,255,255,0.35)",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontFamily: PP_MORI,
+                              fontWeight: 600,
+                              fontSize: "clamp(10px, 0.88vw, 13px)",
+                              lineHeight: "23px",
+                              letterSpacing: "-0.02em",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {child.label}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <Link key={item.href} href={item.href} style={linkStyle(isActive)}>
+              <NavIcon src={item.icon} isActive={isActive} />
+              <span style={labelStyle}>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom section */}
@@ -212,37 +345,16 @@ export default function Sidebar({ isOpen, onToggle }) {
           }}
         />
 
-        {/* Settings & Configuration — restricted roles only see their one page */}
+        {/* Settings & Configuration — hidden for now
         {!isRestrictedRole && (
-          <Link
-            href="/settings"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "clamp(8px, 0.8vw, 12px)",
-              padding: "clamp(11px, 1vw, 14px) 16px clamp(11px, 1vw, 14px) 20px",
-              textDecoration: "none",
-              color: settingsActive ? ORANGE : "rgba(255,255,255,0.7)",
-              borderRight: `3px solid ${settingsActive ? ORANGE : "transparent"}`,
-            }}
-          >
+          <Link href="/settings" style={linkStyle(settingsActive)}>
             <NavIcon src="/setting-icon.svg" isActive={settingsActive} />
-            <span
-              style={{
-                fontFamily: PP_MORI,
-                fontWeight: 600,
-                fontSize: "clamp(11px, 0.97vw, 14px)",
-                lineHeight: "23px",
-                letterSpacing: "-0.02em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Settings & Configuration
-            </span>
+            <span style={labelStyle}>Settings & Configuration</span>
           </Link>
         )}
+        */}
 
-        {/* Profile */}
+        {/* Profile / Account settings */}
         <Link
           href="/settings/profile"
           style={{
@@ -255,29 +367,38 @@ export default function Sidebar({ isOpen, onToggle }) {
         >
           <div
             style={{
-              width: 34.34,
-              height: 34.34,
+              width: 34,
+              height: 34,
               borderRadius: "50%",
               overflow: "hidden",
               flexShrink: 0,
               position: "relative",
+              background: "rgba(255,255,255,0.1)",
             }}
           >
-            <Image
-              src="/profile-image.png"
-              alt={displayName}
-              fill
-              style={{ objectFit: "cover" }}
-            />
+            {profileImage ? (
+              <img
+                src={profileImage}
+                alt={displayName}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <Image
+                src="/profile-image.png"
+                alt={displayName}
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            )}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 fontFamily: GEIST,
                 fontWeight: 600,
-                fontSize: "clamp(12px, 1.04vw, 15.03px)",
-                lineHeight: "15.03px",
-                letterSpacing: "0",
+                fontSize: "clamp(12px, 1.04vw, 15px)",
+                lineHeight: "15px",
                 color: "#ffffff",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -298,9 +419,8 @@ export default function Sidebar({ isOpen, onToggle }) {
                 style={{
                   fontFamily: GEIST,
                   fontWeight: 400,
-                  fontSize: "clamp(10px, 0.89vw, 12.88px)",
-                  lineHeight: "15.03px",
-                  letterSpacing: "0",
+                  fontSize: "clamp(10px, 0.89vw, 13px)",
+                  lineHeight: "15px",
                   color: "rgba(255,255,255,0.42)",
                   whiteSpace: "nowrap",
                 }}
@@ -338,18 +458,7 @@ export default function Sidebar({ isOpen, onToggle }) {
           }}
         >
           <NavIcon src="/logout-icon.svg" isActive={false} />
-          <span
-            style={{
-              fontFamily: PP_MORI,
-              fontWeight: 600,
-              fontSize: "clamp(11px, 0.97vw, 14px)",
-              lineHeight: "23px",
-              letterSpacing: "-0.02em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Logout
-          </span>
+          <span style={labelStyle}>Logout</span>
         </button>
       </div>
     </aside>
