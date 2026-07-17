@@ -88,6 +88,7 @@ export default function Sidebar({ isOpen, onToggle }) {
 
   async function handleLogout() {
     await apiFetch("/auth/logout", { method: "POST" });
+    localStorage.removeItem("admin_token");
     router.push("/");
   }
 

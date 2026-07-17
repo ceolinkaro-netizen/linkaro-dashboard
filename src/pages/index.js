@@ -124,6 +124,7 @@ export default function Home() {
         setToast({ show: true, message: data.message || "Login failed", type: "error" });
         return;
       }
+      if (data.token) localStorage.setItem("admin_token", data.token);
       router.push(data.redirectTo);
     } catch {
       setToast({ show: true, message: "Network error. Please try again.", type: "error" });
