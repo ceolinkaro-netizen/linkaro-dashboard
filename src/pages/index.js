@@ -47,14 +47,27 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   // ── OTP step state ───────────────────────────────────────────────────────
-  const [step, setStep] = useState("login"); // "login" | "otp"
+  const [step, setStep] = useState("login"); // "login"|"otp"|"forgot-email"|"forgot-otp"|"forgot-reset"
   const [pendingOtp, setPendingOtp] = useState("");
   const [otpDigits, setOtpDigits] = useState(Array(OTP_LENGTH).fill(""));
-  const [otpError, setOtpError] = useState(""); // "" | "incomplete" | "wrong"
+  const [otpError, setOtpError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [timer, setTimer] = useState(TIMER_SECONDS);
   const timerRef = useRef(null);
   const inputRefs = useRef([]);
+
+  // ── Forgot password state ────────────────────────────────────────────────
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotEmailError, setForgotEmailError] = useState("");
+  const [forgotPendingOtp, setForgotPendingOtp] = useState("");
+  const [forgotOtpDigits, setForgotOtpDigits] = useState(Array(OTP_LENGTH).fill(""));
+  const [forgotOtpError, setForgotOtpError] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [showForgotNew, setShowForgotNew] = useState(false);
+  const [showForgotConfirm, setShowForgotConfirm] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const forgotInputRefs = useRef([]);
 
   const [toast, setToast] = useState({ show: false, message: "", type: "error" });
 
@@ -74,26 +87,20 @@ export default function Home() {
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
-  // ── Step 1: send OTP ─────────────────────────────────────────────────────
+  // ── Step 1: send login OTP ───────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate(email, password);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
     setLoading(true);
-
     try {
       const res = await apiFetch("/auth/send-otp", {
         method: "POST",
         body: JSON.stringify({ email, password, category: selectedCategory }),
       });
       const data = await res.json();
-
-      if (!res.ok) {
-        setToast({ show: true, message: data.message || "Login failed", type: "error" });
-        return;
-      }
-
+      if (!res.ok) { setToast({ show: true, message: data.message || "Login failed", type: "error" }); return; }
       setPendingOtp(data.otp);
       setOtpDigits(Array(OTP_LENGTH).fill(""));
       setOtpError("");
@@ -107,12 +114,11 @@ export default function Home() {
     }
   }
 
-  // ── Step 2: verify OTP ───────────────────────────────────────────────────
+  // ── Step 2: verify login OTP ─────────────────────────────────────────────
   async function handleVerify() {
     const code = otpDigits.join("");
     if (code.length < OTP_LENGTH) { setOtpError("incomplete"); return; }
     if (code !== pendingOtp) { setOtpError("wrong"); return; }
-
     setVerifying(true);
     try {
       const res = await apiFetch("/auth/login", {
@@ -120,10 +126,7 @@ export default function Home() {
         body: JSON.stringify({ email, password, category: selectedCategory }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setToast({ show: true, message: data.message || "Login failed", type: "error" });
-        return;
-      }
+      if (!res.ok) { setToast({ show: true, message: data.message || "Login failed", type: "error" }); return; }
       if (data.token) localStorage.setItem("admin_token", data.token);
       router.push(data.redirectTo);
     } catch {
@@ -144,10 +147,7 @@ export default function Home() {
         body: JSON.stringify({ email, password, category: selectedCategory }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setToast({ show: true, message: data.message || "Failed to resend", type: "error" });
-        return;
-      }
+      if (!res.ok) { setToast({ show: true, message: data.message || "Failed to resend", type: "error" }); return; }
       setPendingOtp(data.otp);
       startTimer();
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
@@ -158,7 +158,7 @@ export default function Home() {
     }
   }
 
-  // ── OTP box key handling ─────────────────────────────────────────────────
+  // ── OTP box handlers (login) ─────────────────────────────────────────────
   function handleOtpChange(i, value) {
     const digit = value.replace(/\D/g, "").slice(-1);
     setOtpError("");
@@ -167,19 +167,12 @@ export default function Home() {
     setOtpDigits(next);
     if (digit && i < OTP_LENGTH - 1) inputRefs.current[i + 1]?.focus();
   }
-
   function handleOtpKeyDown(i, e) {
     if (e.key === "Backspace") {
-      if (otpDigits[i]) {
-        const next = [...otpDigits];
-        next[i] = "";
-        setOtpDigits(next);
-      } else if (i > 0) {
-        inputRefs.current[i - 1]?.focus();
-      }
+      if (otpDigits[i]) { const next = [...otpDigits]; next[i] = ""; setOtpDigits(next); }
+      else if (i > 0) inputRefs.current[i - 1]?.focus();
     }
   }
-
   function handleOtpPaste(e) {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
@@ -188,8 +181,126 @@ export default function Home() {
     pasted.split("").forEach((ch, idx) => { next[idx] = ch; });
     setOtpDigits(next);
     setOtpError("");
-    const focusIdx = Math.min(pasted.length, OTP_LENGTH - 1);
-    inputRefs.current[focusIdx]?.focus();
+    forgotInputRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+  }
+
+  // ── Forgot password: step 1 — send OTP ──────────────────────────────────
+  async function handleForgotSendOtp(e) {
+    e?.preventDefault();
+    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      setForgotEmailError("Enter a valid email address.");
+      return;
+    }
+    setForgotEmailError("");
+    setForgotLoading(true);
+    try {
+      const res = await apiFetch("/auth/forgot-send-otp", {
+        method: "POST",
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setToast({ show: true, message: data.message || "Failed to send code", type: "error" }); return; }
+      setForgotPendingOtp(data.otp);
+      setForgotOtpDigits(Array(OTP_LENGTH).fill(""));
+      setForgotOtpError("");
+      setStep("forgot-otp");
+      startTimer();
+      setTimeout(() => forgotInputRefs.current[0]?.focus(), 50);
+    } catch {
+      setToast({ show: true, message: "Network error. Please try again.", type: "error" });
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
+  // ── Forgot password: step 2 — verify OTP ────────────────────────────────
+  function handleForgotVerifyOtp() {
+    const code = forgotOtpDigits.join("");
+    if (code.length < OTP_LENGTH) { setForgotOtpError("incomplete"); return; }
+    if (code !== forgotPendingOtp) { setForgotOtpError("wrong"); return; }
+    clearInterval(timerRef.current);
+    setForgotNewPassword("");
+    setForgotConfirmPassword("");
+    setStep("forgot-reset");
+  }
+
+  async function handleForgotResend() {
+    if (timer > 0) return;
+    setForgotOtpDigits(Array(OTP_LENGTH).fill(""));
+    setForgotOtpError("");
+    setForgotLoading(true);
+    try {
+      const res = await apiFetch("/auth/forgot-send-otp", {
+        method: "POST",
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setToast({ show: true, message: data.message || "Failed to resend", type: "error" }); return; }
+      setForgotPendingOtp(data.otp);
+      startTimer();
+      setTimeout(() => forgotInputRefs.current[0]?.focus(), 50);
+    } catch {
+      setToast({ show: true, message: "Network error. Please try again.", type: "error" });
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
+  // ── Forgot OTP box handlers ──────────────────────────────────────────────
+  function handleForgotOtpChange(i, value) {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    setForgotOtpError("");
+    const next = [...forgotOtpDigits];
+    next[i] = digit;
+    setForgotOtpDigits(next);
+    if (digit && i < OTP_LENGTH - 1) forgotInputRefs.current[i + 1]?.focus();
+  }
+  function handleForgotOtpKeyDown(i, e) {
+    if (e.key === "Backspace") {
+      if (forgotOtpDigits[i]) { const next = [...forgotOtpDigits]; next[i] = ""; setForgotOtpDigits(next); }
+      else if (i > 0) forgotInputRefs.current[i - 1]?.focus();
+    }
+  }
+  function handleForgotOtpPaste(e) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((ch, idx) => { next[idx] = ch; });
+    setForgotOtpDigits(next);
+    setForgotOtpError("");
+    forgotInputRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
+  }
+
+  // ── Forgot password: step 3 — reset ─────────────────────────────────────
+  async function handleForgotReset(e) {
+    e.preventDefault();
+    if (forgotNewPassword.length < 6) {
+      setToast({ show: true, message: "Password must be at least 6 characters.", type: "error" });
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setToast({ show: true, message: "Passwords do not match.", type: "error" });
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const res = await apiFetch("/auth/forgot-reset", {
+        method: "POST",
+        body: JSON.stringify({ email: forgotEmail.trim(), password: forgotNewPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setToast({ show: true, message: data.message || "Reset failed", type: "error" }); return; }
+      setToast({ show: true, message: "Password reset successfully. Please log in.", type: "success" });
+      setForgotEmail("");
+      setForgotNewPassword("");
+      setForgotConfirmPassword("");
+      setStep("login");
+    } catch {
+      setToast({ show: true, message: "Network error. Please try again.", type: "error" });
+    } finally {
+      setForgotLoading(false);
+    }
   }
 
   // ── Shared styles ────────────────────────────────────────────────────────
@@ -209,22 +320,40 @@ export default function Home() {
       borderRadius: "140px",
       padding: "clamp(9px, 0.9vw, 13px) clamp(12px, 1vw, 16px)",
       color: "#ffffff", fontFamily: GEIST, fontWeight: 400,
-      fontSize: "clamp(11px, 0.9vw, 14px)",
+      fontSize: "clamp(11px, 0.9vw, 14px)", outline: "none",
     };
   }
 
   const hasOtpError = otpError === "incomplete" || otpError === "wrong";
-  const otpErrorMsg = otpError === "wrong"
-    ? "Invalid verification code"
-    : "Please enter the complete verification code";
+  const otpErrorMsg = otpError === "wrong" ? "Invalid verification code" : "Please enter the complete verification code";
   const isVerifyEnabled = otpDigits.join("").length === OTP_LENGTH && timer > 0 && !verifying;
+
+  const hasForgotOtpError = forgotOtpError === "incomplete" || forgotOtpError === "wrong";
+  const forgotOtpErrorMsg = forgotOtpError === "wrong" ? "Invalid verification code" : "Please enter the complete verification code";
+  const isForgotVerifyEnabled = forgotOtpDigits.join("").length === OTP_LENGTH && timer > 0;
+
+  // Back button shared style
+  const backBtn = {
+    width: 42, height: 42, borderRadius: "50%", background: "#26334B",
+    border: "none", cursor: "pointer", display: "flex", alignItems: "center",
+    justifyContent: "center", marginBottom: "clamp(24px, 3vw, 40px)",
+  };
+  const backArrow = (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 12L6 8L10 4" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+  const logoEl = (
+    <div style={{ marginBottom: "clamp(16px, 2vw, 28px)" }}>
+      <Image src="/logo.png" alt="Linkaro" width={187} height={93}
+        style={{ width: "clamp(120px, 13vw, 187px)", height: "auto" }} priority />
+    </div>
+  );
 
   return (
     <>
-      <StatusToast
-        show={toast.show} message={toast.message} type={toast.type}
-        onClose={() => setToast((t) => ({ ...t, show: false }))}
-      />
+      <StatusToast show={toast.show} message={toast.message} type={toast.type}
+        onClose={() => setToast((t) => ({ ...t, show: false }))} />
       <Head><title>Linkaro</title></Head>
       <div style={{ minHeight: "100vh", background: "#000f2c", display: "flex", position: "relative", overflow: "hidden" }}>
         {/* Top-right gradient */}
@@ -255,10 +384,7 @@ export default function Home() {
           {/* ── LOGIN STEP ─────────────────────────────────────────────── */}
           {step === "login" && (
             <form onSubmit={handleSubmit} noValidate style={{ width: "100%", maxWidth: "clamp(300px, 36vw, 510px)" }}>
-              <div style={{ marginBottom: "clamp(16px, 2vw, 28px)" }}>
-                <Image src="/logo.png" alt="Linkaro" width={187} height={93}
-                  style={{ width: "clamp(120px, 13vw, 187px)", height: "auto" }} priority />
-              </div>
+              {logoEl}
               <h1 style={{
                 fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)",
                 lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em",
@@ -292,8 +418,7 @@ export default function Home() {
                     background: "none", border: "none", cursor: "pointer", padding: 0,
                     display: "flex", alignItems: "center", lineHeight: 0,
                   }}>
-                    <img src={showPassword ? "/eye-hide.ico" : "/eye.png"}
-                      alt={showPassword ? "Hide" : "Show"}
+                    <img src={showPassword ? "/eye-hide.ico" : "/eye.png"} alt={showPassword ? "Hide" : "Show"}
                       style={{ width: "clamp(14px, 1.2vw, 18px)", height: "clamp(14px, 1.2vw, 18px)", objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.65 }} />
                   </button>
                 </div>
@@ -319,14 +444,17 @@ export default function Home() {
                     Remember me
                   </span>
                 </div>
-                <a href="#" style={{ fontFamily: GEIST, fontWeight: 500, fontSize: "clamp(10px, 0.76vw, 11px)", lineHeight: "12px", letterSpacing: "0.3px", color: "#007AFF", textDecoration: "none" }}>
+                <button type="button" onClick={() => { setForgotEmail(""); setForgotEmailError(""); setStep("forgot-email"); }} style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
+                  fontFamily: GEIST, fontWeight: 500, fontSize: "clamp(10px, 0.76vw, 11px)", lineHeight: "12px", letterSpacing: "0.3px", color: "#007AFF",
+                }}>
                   Forgot password?
-                </a>
+                </button>
               </div>
 
               {/* Category */}
               <div style={{ marginBottom: "clamp(12px, 1.5vw, 20px)" }}>
-                <label style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(10px, 0.83vw, 12px)", lineHeight: "1", letterSpacing: "0", color: "#ffffff", display: "block", marginBottom: "clamp(8px, 0.8vw, 12px)" }}>
+                <label style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(10px, 0.83vw, 12px)", lineHeight: "1", color: "#ffffff", display: "block", marginBottom: "clamp(8px, 0.8vw, 12px)" }}>
                   Select Category
                 </label>
                 <div style={{ display: "flex", gap: "clamp(6px, 0.7vw, 10px)", flexWrap: "wrap" }}>
@@ -344,7 +472,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Sign In */}
               <button type="submit" disabled={loading} style={{
                 width: "100%", background: ORANGE, border: "none", borderRadius: "140px",
                 padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600,
@@ -354,122 +481,141 @@ export default function Home() {
               }}>
                 {loading ? "Sending code..." : "Sign In"}
               </button>
-
               <div style={{ height: "1px", background: "rgba(255,255,255,0.15)", width: "100%" }} />
             </form>
           )}
 
-          {/* ── OTP STEP ───────────────────────────────────────────────── */}
+          {/* ── LOGIN OTP STEP ──────────────────────────────────────────── */}
           {step === "otp" && (
             <div style={{ width: "100%", maxWidth: "clamp(300px, 36vw, 510px)" }}>
-              {/* Logo */}
-              <div style={{ marginBottom: "clamp(16px, 2vw, 28px)" }}>
-                <Image src="/logo.png" alt="Linkaro" width={187} height={93}
-                  style={{ width: "clamp(120px, 13vw, 187px)", height: "auto" }} priority />
-              </div>
-
-              {/* Back button */}
-              <button type="button" onClick={() => { setStep("login"); clearInterval(timerRef.current); }} style={{
-                width: 42, height: 42, borderRadius: "50%", background: "#26334B",
-                border: "none", cursor: "pointer", display: "flex", alignItems: "center",
-                justifyContent: "center", marginBottom: "clamp(24px, 3vw, 40px)",
-              }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 12L6 8L10 4" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-
-              {/* Title */}
-              <h1 style={{
-                fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)",
-                lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em",
-                color: "#ffffff", margin: "0 0 clamp(6px, 0.7vw, 10px) 0",
-              }}>Verification</h1>
-
-              {/* Subtitle */}
-              <p style={{
-                fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)",
-                lineHeight: "1.5", letterSpacing: "0.02em",
-                color: "rgba(255,255,255,0.85)", margin: "0 0 clamp(28px, 3vw, 44px) 0",
-              }}>
+              {logoEl}
+              <button type="button" onClick={() => { setStep("login"); clearInterval(timerRef.current); }} style={backBtn}>{backArrow}</button>
+              <h1 style={{ fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)", lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em", color: "#ffffff", margin: "0 0 clamp(6px, 0.7vw, 10px) 0" }}>Verification</h1>
+              <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", lineHeight: "1.5", letterSpacing: "0.02em", color: "rgba(255,255,255,0.85)", margin: "0 0 clamp(28px, 3vw, 44px) 0" }}>
                 {"We've sent the code to your email -"}<br />
                 <span style={{ color: "#ffffff", fontWeight: 500 }}>{email}</span>
               </p>
-
-              {/* OTP boxes */}
-              <div style={{ display: "flex", gap: "clamp(8px, 1.2vw, 16px)", marginBottom: hasOtpError ? "clamp(6px, 0.6vw, 10px)" : "clamp(20px, 2.2vw, 32px)" }}
-                onPaste={handleOtpPaste}>
+              <div style={{ display: "flex", gap: "clamp(8px, 1.2vw, 16px)", marginBottom: hasOtpError ? "clamp(6px, 0.6vw, 10px)" : "clamp(20px, 2.2vw, 32px)" }} onPaste={handleOtpPaste}>
                 {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otpDigits[i]}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    style={{
-                      width: "clamp(48px, 4.5vw, 64px)",
-                      height: "clamp(48px, 4.5vw, 64px)",
-                      flexShrink: 0,
-                      textAlign: "center",
-                      background: INPUT_BG,
-                      border: `1.5px solid ${hasOtpError ? ERROR_COLOR : otpDigits[i] ? ORANGE : "transparent"}`,
-                      borderRadius: "50%",
-                      color: "#ffffff",
-                      fontFamily: GEIST,
-                      fontWeight: 700,
-                      fontSize: "clamp(16px, 1.6vw, 22px)",
-                      outline: "none",
-                      caretColor: "transparent",
-                      padding: 0,
-                    }}
-                  />
+                  <input key={i} ref={(el) => { inputRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1}
+                    value={otpDigits[i]} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    style={{ width: "clamp(48px, 4.5vw, 64px)", height: "clamp(48px, 4.5vw, 64px)", flexShrink: 0, textAlign: "center", background: INPUT_BG, border: `1.5px solid ${hasOtpError ? ERROR_COLOR : otpDigits[i] ? ORANGE : "transparent"}`, borderRadius: "50%", color: "#ffffff", fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(16px, 1.6vw, 22px)", outline: "none", caretColor: "transparent", padding: 0 }} />
                 ))}
               </div>
-
-              {/* Error message */}
-              {hasOtpError && (
-                <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(11px, 0.9vw, 14px)", color: ERROR_COLOR, margin: "0 0 clamp(16px, 1.8vw, 26px) 0" }}>
-                  {otpErrorMsg}
-                </p>
-              )}
-
-              {/* Timer */}
+              {hasOtpError && <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(11px, 0.9vw, 14px)", color: ERROR_COLOR, margin: "0 0 clamp(16px, 1.8vw, 26px) 0" }}>{otpErrorMsg}</p>}
               <div style={{ textAlign: "center", marginBottom: "clamp(6px, 0.7vw, 10px)" }}>
-                <span style={{ fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1vw, 14px)", color: "#ffffff" }}>
-                  {formatTimer(timer)}
-                </span>
+                <span style={{ fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1vw, 14px)", color: "#ffffff" }}>{formatTimer(timer)}</span>
               </div>
-
-              {/* Resend */}
               <div style={{ textAlign: "center", marginBottom: "clamp(32px, 4vw, 56px)" }}>
-                <span style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", color: "#ffffff" }}>
-                  {"Didn't receive code? "}
-                </span>
-                <button type="button" onClick={handleResend} disabled={timer > 0 || loading} style={{
-                  background: "none", border: "none", cursor: timer > 0 ? "default" : "pointer",
-                  fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1.1vw, 16px)",
-                  color: "#ffffff", opacity: timer > 0 ? 0.38 : 1, padding: 0,
-                }}>
-                  Resend Code
-                </button>
+                <span style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", color: "#ffffff" }}>{"Didn't receive code? "}</span>
+                <button type="button" onClick={handleResend} disabled={timer > 0 || loading} style={{ background: "none", border: "none", cursor: timer > 0 ? "default" : "pointer", fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1.1vw, 16px)", color: "#ffffff", opacity: timer > 0 ? 0.38 : 1, padding: 0 }}>Resend Code</button>
               </div>
-
-              {/* Verify button */}
-              <button type="button" onClick={handleVerify} disabled={!isVerifyEnabled} style={{
-                width: "100%", background: ORANGE, border: "none", borderRadius: "140px",
-                padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600,
-                fontSize: "clamp(13px, 1.2vw, 17.3px)", lineHeight: "0.9", letterSpacing: "-0.03em",
-                color: "#ffffff", cursor: isVerifyEnabled ? "pointer" : "not-allowed",
-                opacity: isVerifyEnabled ? 1 : 0.45,
-              }}>
+              <button type="button" onClick={handleVerify} disabled={!isVerifyEnabled} style={{ width: "100%", background: ORANGE, border: "none", borderRadius: "140px", padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600, fontSize: "clamp(13px, 1.2vw, 17.3px)", lineHeight: "0.9", letterSpacing: "-0.03em", color: "#ffffff", cursor: isVerifyEnabled ? "pointer" : "not-allowed", opacity: isVerifyEnabled ? 1 : 0.45 }}>
                 {verifying ? "Verifying..." : "Verify"}
               </button>
-
               <div style={{ height: "1px", background: "rgba(255,255,255,0.15)", width: "100%", marginTop: "clamp(16px, 1.8vw, 26px)" }} />
             </div>
+          )}
+
+          {/* ── FORGOT: EMAIL STEP ──────────────────────────────────────── */}
+          {step === "forgot-email" && (
+            <form onSubmit={handleForgotSendOtp} noValidate style={{ width: "100%", maxWidth: "clamp(300px, 36vw, 510px)" }}>
+              {logoEl}
+              <button type="button" onClick={() => setStep("login")} style={backBtn}>{backArrow}</button>
+              <h1 style={{ fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)", lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em", color: "#ffffff", margin: "0 0 clamp(6px, 0.7vw, 10px) 0" }}>Forgot Password</h1>
+              <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", lineHeight: "1.5", color: "rgba(255,255,255,0.75)", margin: "0 0 clamp(24px, 2.5vw, 36px) 0" }}>
+                Enter your account email and we'll send you a verification code to reset your password.
+              </p>
+              <div style={{ marginBottom: "clamp(16px, 1.8vw, 26px)" }}>
+                <label style={labelStyle}>Email address</label>
+                <input type="email" placeholder="Enter your email" value={forgotEmail}
+                  onChange={(e) => { setForgotEmail(e.target.value); setForgotEmailError(""); }}
+                  style={inputStyle(!!forgotEmailError)} />
+                {forgotEmailError && <span style={errorStyle}>{forgotEmailError}</span>}
+              </div>
+              <button type="submit" disabled={forgotLoading} style={{ width: "100%", background: ORANGE, border: "none", borderRadius: "140px", padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600, fontSize: "clamp(13px, 1.2vw, 17.3px)", lineHeight: "0.9", letterSpacing: "-0.03em", color: "#ffffff", cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1, marginBottom: "clamp(16px, 1.8vw, 26px)" }}>
+                {forgotLoading ? "Sending code..." : "Send Code"}
+              </button>
+              <div style={{ height: "1px", background: "rgba(255,255,255,0.15)", width: "100%" }} />
+            </form>
+          )}
+
+          {/* ── FORGOT: OTP STEP ────────────────────────────────────────── */}
+          {step === "forgot-otp" && (
+            <div style={{ width: "100%", maxWidth: "clamp(300px, 36vw, 510px)" }}>
+              {logoEl}
+              <button type="button" onClick={() => { setStep("forgot-email"); clearInterval(timerRef.current); }} style={backBtn}>{backArrow}</button>
+              <h1 style={{ fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)", lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em", color: "#ffffff", margin: "0 0 clamp(6px, 0.7vw, 10px) 0" }}>Verification</h1>
+              <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", lineHeight: "1.5", color: "rgba(255,255,255,0.85)", margin: "0 0 clamp(28px, 3vw, 44px) 0" }}>
+                {"We've sent the code to your email -"}<br />
+                <span style={{ color: "#ffffff", fontWeight: 500 }}>{forgotEmail}</span>
+              </p>
+              <div style={{ display: "flex", gap: "clamp(8px, 1.2vw, 16px)", marginBottom: hasForgotOtpError ? "clamp(6px, 0.6vw, 10px)" : "clamp(20px, 2.2vw, 32px)" }} onPaste={handleForgotOtpPaste}>
+                {Array.from({ length: OTP_LENGTH }).map((_, i) => (
+                  <input key={i} ref={(el) => { forgotInputRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1}
+                    value={forgotOtpDigits[i]} onChange={(e) => handleForgotOtpChange(i, e.target.value)} onKeyDown={(e) => handleForgotOtpKeyDown(i, e)}
+                    style={{ width: "clamp(48px, 4.5vw, 64px)", height: "clamp(48px, 4.5vw, 64px)", flexShrink: 0, textAlign: "center", background: INPUT_BG, border: `1.5px solid ${hasForgotOtpError ? ERROR_COLOR : forgotOtpDigits[i] ? ORANGE : "transparent"}`, borderRadius: "50%", color: "#ffffff", fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(16px, 1.6vw, 22px)", outline: "none", caretColor: "transparent", padding: 0 }} />
+                ))}
+              </div>
+              {hasForgotOtpError && <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(11px, 0.9vw, 14px)", color: ERROR_COLOR, margin: "0 0 clamp(16px, 1.8vw, 26px) 0" }}>{forgotOtpErrorMsg}</p>}
+              <div style={{ textAlign: "center", marginBottom: "clamp(6px, 0.7vw, 10px)" }}>
+                <span style={{ fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1vw, 14px)", color: "#ffffff" }}>{formatTimer(timer)}</span>
+              </div>
+              <div style={{ textAlign: "center", marginBottom: "clamp(32px, 4vw, 56px)" }}>
+                <span style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", color: "#ffffff" }}>{"Didn't receive code? "}</span>
+                <button type="button" onClick={handleForgotResend} disabled={timer > 0 || forgotLoading} style={{ background: "none", border: "none", cursor: timer > 0 ? "default" : "pointer", fontFamily: GEIST, fontWeight: 700, fontSize: "clamp(12px, 1.1vw, 16px)", color: "#ffffff", opacity: timer > 0 ? 0.38 : 1, padding: 0 }}>Resend Code</button>
+              </div>
+              <button type="button" onClick={handleForgotVerifyOtp} disabled={!isForgotVerifyEnabled} style={{ width: "100%", background: ORANGE, border: "none", borderRadius: "140px", padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600, fontSize: "clamp(13px, 1.2vw, 17.3px)", lineHeight: "0.9", letterSpacing: "-0.03em", color: "#ffffff", cursor: isForgotVerifyEnabled ? "pointer" : "not-allowed", opacity: isForgotVerifyEnabled ? 1 : 0.45 }}>
+                Verify
+              </button>
+              <div style={{ height: "1px", background: "rgba(255,255,255,0.15)", width: "100%", marginTop: "clamp(16px, 1.8vw, 26px)" }} />
+            </div>
+          )}
+
+          {/* ── FORGOT: RESET PASSWORD STEP ─────────────────────────────── */}
+          {step === "forgot-reset" && (
+            <form onSubmit={handleForgotReset} noValidate style={{ width: "100%", maxWidth: "clamp(300px, 36vw, 510px)" }}>
+              {logoEl}
+              <button type="button" onClick={() => setStep("forgot-otp")} style={backBtn}>{backArrow}</button>
+              <h1 style={{ fontFamily: PP_MORI, fontWeight: 600, fontSize: "clamp(22px, 2.36vw, 34px)", lineHeight: "clamp(22px, 2.01vw, 29px)", letterSpacing: "-0.02em", color: "#ffffff", margin: "0 0 clamp(6px, 0.7vw, 10px) 0" }}>Reset Password</h1>
+              <p style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(12px, 1.1vw, 16px)", lineHeight: "1.5", color: "rgba(255,255,255,0.75)", margin: "0 0 clamp(24px, 2.5vw, 36px) 0" }}>
+                Choose a new password for <span style={{ color: "#ffffff", fontWeight: 500 }}>{forgotEmail}</span>
+              </p>
+
+              {/* New password */}
+              <div style={{ marginBottom: "clamp(10px, 1.1vw, 16px)" }}>
+                <label style={labelStyle}>New Password</label>
+                <div style={{ position: "relative" }}>
+                  <input type={showForgotNew ? "text" : "password"} placeholder="Enter new password" value={forgotNewPassword}
+                    onChange={(e) => setForgotNewPassword(e.target.value)}
+                    style={{ ...inputStyle(false), paddingRight: "clamp(38px, 3vw, 48px)" }} />
+                  <button type="button" onClick={() => setShowForgotNew((v) => !v)} style={{ position: "absolute", right: "clamp(10px, 0.9vw, 14px)", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                    <img src={showForgotNew ? "/eye-hide.ico" : "/eye.png"} alt="" style={{ width: "clamp(14px, 1.2vw, 18px)", height: "clamp(14px, 1.2vw, 18px)", objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.65 }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm password */}
+              <div style={{ marginBottom: "clamp(16px, 1.8vw, 26px)" }}>
+                <label style={labelStyle}>Confirm Password</label>
+                <div style={{ position: "relative" }}>
+                  <input type={showForgotConfirm ? "text" : "password"} placeholder="Re-enter new password" value={forgotConfirmPassword}
+                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                    style={{ ...inputStyle(forgotNewPassword && forgotConfirmPassword && forgotNewPassword !== forgotConfirmPassword), paddingRight: "clamp(38px, 3vw, 48px)" }} />
+                  <button type="button" onClick={() => setShowForgotConfirm((v) => !v)} style={{ position: "absolute", right: "clamp(10px, 0.9vw, 14px)", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                    <img src={showForgotConfirm ? "/eye-hide.ico" : "/eye.png"} alt="" style={{ width: "clamp(14px, 1.2vw, 18px)", height: "clamp(14px, 1.2vw, 18px)", objectFit: "contain", filter: "brightness(0) invert(1)", opacity: 0.65 }} />
+                  </button>
+                </div>
+                {forgotNewPassword && forgotConfirmPassword && forgotNewPassword !== forgotConfirmPassword && (
+                  <span style={errorStyle}>Passwords do not match</span>
+                )}
+              </div>
+
+              <button type="submit" disabled={forgotLoading} style={{ width: "100%", background: ORANGE, border: "none", borderRadius: "140px", padding: "clamp(12px, 1.15vw, 17px) 0", fontFamily: GEIST, fontWeight: 600, fontSize: "clamp(13px, 1.2vw, 17.3px)", lineHeight: "0.9", letterSpacing: "-0.03em", color: "#ffffff", cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1, marginBottom: "clamp(16px, 1.8vw, 26px)" }}>
+                {forgotLoading ? "Resetting..." : "Reset Password"}
+              </button>
+              <div style={{ height: "1px", background: "rgba(255,255,255,0.15)", width: "100%" }} />
+            </form>
           )}
         </div>
       </div>
