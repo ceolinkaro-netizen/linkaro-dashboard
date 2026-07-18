@@ -42,7 +42,6 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("admin");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -71,8 +70,6 @@ export default function Home() {
 
   const [toast, setToast] = useState({ show: false, message: "", type: "error" });
 
-  const categories = ["admin", "user manager", "ticket manager"];
-
   // ── Timer logic ──────────────────────────────────────────────────────────
   function startTimer() {
     clearInterval(timerRef.current);
@@ -97,7 +94,7 @@ export default function Home() {
     try {
       const res = await apiFetch("/auth/send-otp", {
         method: "POST",
-        body: JSON.stringify({ email, password, category: selectedCategory }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setToast({ show: true, message: data.message || "Login failed", type: "error" }); return; }
@@ -123,7 +120,7 @@ export default function Home() {
     try {
       const res = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password, category: selectedCategory }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setToast({ show: true, message: data.message || "Login failed", type: "error" }); return; }
@@ -144,7 +141,7 @@ export default function Home() {
     try {
       const res = await apiFetch("/auth/send-otp", {
         method: "POST",
-        body: JSON.stringify({ email, password, category: selectedCategory }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) { setToast({ show: true, message: data.message || "Failed to resend", type: "error" }); return; }
@@ -452,25 +449,7 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Category */}
-              <div style={{ marginBottom: "clamp(12px, 1.5vw, 20px)" }}>
-                <label style={{ fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(10px, 0.83vw, 12px)", lineHeight: "1", color: "#ffffff", display: "block", marginBottom: "clamp(8px, 0.8vw, 12px)" }}>
-                  Select Category
-                </label>
-                <div style={{ display: "flex", gap: "clamp(6px, 0.7vw, 10px)", flexWrap: "wrap" }}>
-                  {categories.map((cat) => (
-                    <button key={cat} type="button" onClick={() => setSelectedCategory(cat)} style={{
-                      background: INPUT_BG,
-                      border: `1.5px solid ${selectedCategory === cat ? ORANGE : "transparent"}`,
-                      borderRadius: "200px", padding: "clamp(7px, 0.65vw, 10px) clamp(14px, 1.4vw, 22px)",
-                      fontFamily: GEIST, fontWeight: 400, fontSize: "clamp(11px, 1.04vw, 15px)",
-                      lineHeight: "1", letterSpacing: "-0.02em",
-                      color: selectedCategory === cat ? "#ffffff" : "#929292",
-                      cursor: "pointer", transition: "color 0.15s, border-color 0.15s",
-                    }}>{cat}</button>
-                  ))}
-                </div>
-              </div>
+
 
               <button type="submit" disabled={loading} style={{
                 width: "100%", background: ORANGE, border: "none", borderRadius: "140px",
