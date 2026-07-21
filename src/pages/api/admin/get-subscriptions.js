@@ -30,6 +30,7 @@ export default async function handler(req, res) {
             subscriptionEndDate: 1,
             amountPaid: 1,
             paymentMethod: 1,
+            paymentOption: 1,
             dateSubmitted: 1,
             status: 1,
 

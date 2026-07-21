@@ -35,7 +35,7 @@ const EXPENSES_PER_MONTH_PKR = EXPENSES_PER_MONTH_USD * USD_TO_PKR;
 
 // Fixed plan prices (PKR) — used to recognize revenue per approved
 // subscription instead of trusting the manually-entered amountPaid field.
-const PLAN_PRICE_PKR = { basic: 1000, badge: 500 };
+const PLAN_PRICE_PKR = { basic: 1499, badge: 999 };
 
 function isBadgePlan(subscriptionType) {
   return (subscriptionType || "").toLowerCase().includes("badge");

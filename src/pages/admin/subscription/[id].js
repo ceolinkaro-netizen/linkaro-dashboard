@@ -587,36 +587,38 @@ export default function SubscriptionTicketDetails() {
                   Subscription Ticket Details
                 </h1>
               </div>
-              <div style={{ display: "flex", gap: "clamp(8px, 0.8vw, 12px)" }}>
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("rejected")}
-                  disabled={updating}
-                  style={{
-                    ...btnBase,
-                    background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    padding: "clamp(7px, 0.65vw, 10px) clamp(16px, 1.5vw, 24px)",
-                    opacity: updating ? 0.6 : 1,
-                  }}
-                >
-                  Reject
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmAction("active")}
-                  disabled={updating}
-                  style={{
-                    ...btnBase,
-                    background: ORANGE,
-                    border: "none",
-                    padding: "clamp(7px, 0.65vw, 10px) clamp(16px, 1.5vw, 24px)",
-                    opacity: updating ? 0.6 : 1,
-                  }}
-                >
-                  Approve
-                </button>
-              </div>
+              {item.paymentOption !== "Google Play" && (
+                <div style={{ display: "flex", gap: "clamp(8px, 0.8vw, 12px)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction("rejected")}
+                    disabled={updating}
+                    style={{
+                      ...btnBase,
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.6)",
+                      padding: "clamp(7px, 0.65vw, 10px) clamp(16px, 1.5vw, 24px)",
+                      opacity: updating ? 0.6 : 1,
+                    }}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmAction("active")}
+                    disabled={updating}
+                    style={{
+                      ...btnBase,
+                      background: ORANGE,
+                      border: "none",
+                      padding: "clamp(7px, 0.65vw, 10px) clamp(16px, 1.5vw, 24px)",
+                      opacity: updating ? 0.6 : 1,
+                    }}
+                  >
+                    Approve
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -677,161 +679,192 @@ export default function SubscriptionTicketDetails() {
               >
                 <SectionHeader>Payment Proof</SectionHeader>
 
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.15)",
-                    borderRadius: 16,
-                    padding: "clamp(20px, 2vw, 32px)",
-                    marginBottom: "clamp(14px, 1.3vw, 20px)",
-                  }}
-                >
-                  {item.receiptImage ? (
-                    <div
-                      style={{ position: "relative", display: "inline-block", width: "100%" }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.querySelector(".preview-overlay").style.opacity = "1";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.querySelector(".preview-overlay").style.opacity = "0";
-                      }}
-                    >
-                      <img
-                        src={item.receiptImage}
-                        alt="Receipt"
-                        style={{
-                          width: "100%",
-                          maxWidth: "100%",
-                          maxHeight: "320px",
-                          borderRadius: 12,
-                          display: "block",
-                          objectFit: "contain",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="preview-overlay"
-                        onClick={() => setPreviewSrc(item.receiptImage)}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background: "rgba(0,0,0,0.5)",
-                          border: "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#fff",
-                          fontFamily: GEIST,
-                          fontSize: "clamp(11px, 0.9vw, 13px)",
-                          borderRadius: 12,
-                          opacity: 0,
-                          transition: "opacity 0.15s",
-                        }}
-                      >
-                        Click to preview
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        background: "#6F6F6F",
-                        borderRadius: 12,
-                        aspectRatio: "2 / 1",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <img
-                        src="/gallery-icon.png"
-                        alt="No receipt"
-                        style={{ width: 20, height: 18, objectFit: "contain" }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "clamp(8px, 0.8vw, 12px)",
-                  }}
-                >
-                  <a
-                    href={item.receiptImage || "#"}
-                    download="receipt"
+                {item.paymentOption === "Google Play" ? (
+                  <div
                     style={{
-                      ...btnBase,
-                      background: item.receiptImage ? ORANGE : "rgba(255,255,255,0.2)",
-                      border: "none",
-                      padding: "clamp(9px, 0.85vw, 13px) clamp(20px, 2vw, 32px)",
-                      textDecoration: "none",
-                      display: "inline-block",
-                      pointerEvents: item.receiptImage ? "auto" : "none",
+                      background: "rgba(20,202,116,0.08)",
+                      border: "1px solid rgba(20,202,116,0.25)",
+                      borderRadius: 12,
+                      padding: "clamp(24px, 2.5vw, 40px) clamp(20px, 2vw, 32px)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 12,
+                      textAlign: "center",
                     }}
                   >
-                    Download Image
-                  </a>
-                </div>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" stroke="#14CA74" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 12l2 2 4-4" stroke="#14CA74" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontFamily: GEIST, fontWeight: 600, fontSize: "clamp(12px, 1vw, 14px)", color: "#14CA74" }}>
+                      Paid via Google Play
+                    </span>
+                    <span style={{ fontFamily: GEIST, fontSize: "clamp(10px, 0.85vw, 12px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                      This subscription is managed and verified automatically by Google Play. No manual receipt is required.
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.15)",
+                        borderRadius: 16,
+                        padding: "clamp(20px, 2vw, 32px)",
+                        marginBottom: "clamp(14px, 1.3vw, 20px)",
+                      }}
+                    >
+                      {item.receiptImage ? (
+                        <div
+                          style={{ position: "relative", display: "inline-block", width: "100%" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.querySelector(".preview-overlay").style.opacity = "1";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.querySelector(".preview-overlay").style.opacity = "0";
+                          }}
+                        >
+                          <img
+                            src={item.receiptImage}
+                            alt="Receipt"
+                            style={{
+                              width: "100%",
+                              maxWidth: "100%",
+                              maxHeight: "320px",
+                              borderRadius: 12,
+                              display: "block",
+                              objectFit: "contain",
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="preview-overlay"
+                            onClick={() => setPreviewSrc(item.receiptImage)}
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              background: "rgba(0,0,0,0.5)",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#fff",
+                              fontFamily: GEIST,
+                              fontSize: "clamp(11px, 0.9vw, 13px)",
+                              borderRadius: 12,
+                              opacity: 0,
+                              transition: "opacity 0.15s",
+                            }}
+                          >
+                            Click to preview
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            background: "#6F6F6F",
+                            borderRadius: 12,
+                            aspectRatio: "2 / 1",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100%",
+                          }}
+                        >
+                          <img
+                            src="/gallery-icon.png"
+                            alt="No receipt"
+                            style={{ width: 20, height: 18, objectFit: "contain" }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "clamp(8px, 0.8vw, 12px)",
+                      }}
+                    >
+                      <a
+                        href={item.receiptImage || "#"}
+                        download="receipt"
+                        style={{
+                          ...btnBase,
+                          background: item.receiptImage ? ORANGE : "rgba(255,255,255,0.2)",
+                          border: "none",
+                          padding: "clamp(9px, 0.85vw, 13px) clamp(20px, 2vw, 32px)",
+                          textDecoration: "none",
+                          display: "inline-block",
+                          pointerEvents: item.receiptImage ? "auto" : "none",
+                        }}
+                      >
+                        Download Image
+                      </a>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Bottom action buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "clamp(8px, 0.8vw, 12px)",
-                flexWrap: "wrap",
-                marginTop: "clamp(20px, 2vw, 32px)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setConfirmAction("fraud")}
-                disabled={updating}
+            {/* Bottom action buttons — hidden for Google Play records */}
+            {item.paymentOption !== "Google Play" && (
+              <div
                 style={{
-                  ...btnBase,
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.6)",
-                  padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
-                  opacity: updating ? 0.6 : 1,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "clamp(8px, 0.8vw, 12px)",
+                  flexWrap: "wrap",
+                  marginTop: "clamp(20px, 2vw, 32px)",
                 }}
               >
-                Mark as Fraud
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmAction("active")}
-                disabled={updating}
-                style={{
-                  ...btnBase,
-                  background: ORANGE,
-                  border: "none",
-                  padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
-                  opacity: updating ? 0.6 : 1,
-                }}
-              >
-                Approve &amp; Activate Subscription
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmAction("rejected")}
-                disabled={updating}
-                style={{
-                  ...btnBase,
-                  background: "#B6280C",
-                  border: "none",
-                  padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
-                  opacity: updating ? 0.6 : 1,
-                }}
-              >
-                Reject Ticket
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("fraud")}
+                  disabled={updating}
+                  style={{
+                    ...btnBase,
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                    padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
+                    opacity: updating ? 0.6 : 1,
+                  }}
+                >
+                  Mark as Fraud
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("active")}
+                  disabled={updating}
+                  style={{
+                    ...btnBase,
+                    background: ORANGE,
+                    border: "none",
+                    padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
+                    opacity: updating ? 0.6 : 1,
+                  }}
+                >
+                  Approve &amp; Activate Subscription
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmAction("rejected")}
+                  disabled={updating}
+                  style={{
+                    ...btnBase,
+                    background: "#B6280C",
+                    border: "none",
+                    padding: "clamp(10px, 0.95vw, 14px) clamp(18px, 1.8vw, 28px)",
+                    opacity: updating ? 0.6 : 1,
+                  }}
+                >
+                  Reject Ticket
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>

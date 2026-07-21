@@ -84,8 +84,9 @@ export default function SubscriptionManagement() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
 
-  useEffect(() => { setPage(1); }, [search, statusFilter, typeFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, typeFilter, paymentFilter]);
 
   function fetchData(isRefresh = false) {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -105,7 +106,9 @@ export default function SubscriptionManagement() {
     const typeMatch = typeFilter === "all" || (typeFilter === "badge" ? isBadge : !isBadge);
     const statusValue = (isBadge ? row.user?.badgeSubscriptionStatus : row.user?.subscriptionStatus) || "pending";
     const statusMatch = statusFilter === "all" || statusValue.toLowerCase() === statusFilter;
-    return nameMatch && typeMatch && statusMatch;
+    const isGooglePlay = (row.paymentOption || "").toLowerCase() === "google play";
+    const paymentMatch = paymentFilter === "all" || (paymentFilter === "google_play" ? isGooglePlay : !isGooglePlay);
+    return nameMatch && typeMatch && statusMatch && paymentMatch;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -374,6 +377,49 @@ export default function SubscriptionManagement() {
             {/* Vertical divider */}
             <div style={{ width: 1, background: "rgba(255,255,255,0.07)", alignSelf: "stretch", minHeight: 32 }} />
 
+            {/* Payment Method */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{
+                fontFamily: GEIST, fontWeight: 500, fontSize: "clamp(9px, 0.72vw, 11px)",
+                color: "rgba(255,255,255,0.45)", letterSpacing: "0.06em", textTransform: "uppercase",
+              }}>
+                Payment Method
+              </span>
+              <div style={{ display: "flex", gap: "clamp(5px, 0.5vw, 8px)", flexWrap: "wrap" }}>
+                {[
+                  { key: "all", label: "All" },
+                  { key: "manual", label: "Manual" },
+                  { key: "google_play", label: "Google Play" },
+                ].map(({ key, label }) => {
+                  const active = paymentFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPaymentFilter(key)}
+                      style={{
+                        fontFamily: GEIST,
+                        fontSize: "clamp(10px, 0.8vw, 12px)",
+                        fontWeight: active ? 600 : 400,
+                        padding: "clamp(5px, 0.5vw, 7px) clamp(12px, 1.1vw, 18px)",
+                        borderRadius: 50,
+                        border: active ? "none" : "1px solid rgba(255,255,255,0.15)",
+                        background: active ? "#14CA74" : "rgba(255,255,255,0.05)",
+                        color: active ? "#000F2C" : "#ffffff",
+                        cursor: "pointer",
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Vertical divider */}
+            <div style={{ width: 1, background: "rgba(255,255,255,0.07)", alignSelf: "stretch", minHeight: 32 }} />
+
             {/* Status */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <span style={{
@@ -428,7 +474,7 @@ export default function SubscriptionManagement() {
           </div>
 
           {/* Active filter summary + clear */}
-          {(typeFilter !== "all" || statusFilter !== "all") && (
+          {(typeFilter !== "all" || statusFilter !== "all" || paymentFilter !== "all") && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)", color: "rgba(255,255,255,0.4)" }}>
                 Filtering by:
@@ -444,6 +490,17 @@ export default function SubscriptionManagement() {
                   <button type="button" onClick={() => setTypeFilter("all")} style={{ background: "none", border: "none", cursor: "pointer", color: "#6FB8FF", padding: 0, lineHeight: 1, fontSize: 12, display: "flex" }}>✕</button>
                 </span>
               )}
+              {paymentFilter !== "all" && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  background: "rgba(20,202,116,0.15)", border: "1px solid rgba(20,202,116,0.35)",
+                  borderRadius: 50, padding: "3px 10px 3px 12px",
+                  fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)", color: "#14CA74",
+                }}>
+                  {paymentFilter === "google_play" ? "Google Play" : "Manual"}
+                  <button type="button" onClick={() => setPaymentFilter("all")} style={{ background: "none", border: "none", cursor: "pointer", color: "#14CA74", padding: 0, lineHeight: 1, fontSize: 12, display: "flex" }}>✕</button>
+                </span>
+              )}
               {statusFilter !== "all" && (
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 5,
@@ -457,7 +514,7 @@ export default function SubscriptionManagement() {
               )}
               <button
                 type="button"
-                onClick={() => { setTypeFilter("all"); setStatusFilter("all"); setSearch(""); }}
+                onClick={() => { setTypeFilter("all"); setStatusFilter("all"); setPaymentFilter("all"); setSearch(""); }}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   fontFamily: GEIST, fontSize: "clamp(9px, 0.72vw, 11px)",
@@ -605,11 +662,26 @@ export default function SubscriptionManagement() {
                     const statusValue = isBadge
                       ? (row.user?.badgeSubscriptionStatus || row.status || "—")
                       : (row.user?.subscriptionStatus || row.status || "—");
+                    const isGooglePlay = (row.paymentOption || "").toLowerCase() === "google play";
                     return (
                       <tr key={row._id}>
                         <td style={td}>{row.user?.name || "—"}</td>
                         <td style={td}>{formatDate(row.subscriptionDate || row.createdAt)}</td>
-                        <td style={td}>{row.subscriptionType || "—"}</td>
+                        <td style={td}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                            {row.subscriptionType || "—"}
+                            {isGooglePlay && (
+                              <span style={{
+                                fontSize: "clamp(8px, 0.65vw, 10px)", fontWeight: 600,
+                                padding: "2px 7px", borderRadius: 50,
+                                background: "rgba(20,202,116,0.15)", border: "1px solid rgba(20,202,116,0.4)",
+                                color: "#14CA74", whiteSpace: "nowrap",
+                              }}>
+                                Google Play
+                              </span>
+                            )}
+                          </span>
+                        </td>
                         <td style={td}>{statusValue}</td>
                         <td
                           style={{
