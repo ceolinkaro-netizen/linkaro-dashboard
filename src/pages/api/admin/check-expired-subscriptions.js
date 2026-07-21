@@ -33,7 +33,10 @@ export default async function handler(req, res) {
       .toArray();
 
     const expired = latestSubs.filter(
-      (sub) => sub.subscriptionEndDate && sub.subscriptionEndDate < now
+      (sub) =>
+        sub.subscriptionEndDate &&
+        sub.subscriptionEndDate < now &&
+        sub.paymentOption !== "Google Play"
     );
 
     if (expired.length === 0) {
