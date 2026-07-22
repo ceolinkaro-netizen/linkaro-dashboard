@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { apiFetch } from "@/lib/api";
 
-const PUBLIC_PATHS = ["/", "/privacy-policy", "/terms-of-services"];
+const PUBLIC_PATHS = ["/", "/privacy-policy", "/terms-of-services", "/data-deletion"];
 
 const ROLE_HOME = {
   "user manager": "/admin/user-management",
