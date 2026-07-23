@@ -9,7 +9,7 @@ const ORANGE = "#FE5900";
 const consumerSections = [
   {
     title: "1. Acceptance of Terms",
-    body: "These Terms & Conditions apply to all customers using the Linkaro platform. By creating an account, posting a service request, contacting a service provider, or using any feature of the platform, you agree to these Terms & Conditions.",
+    body: "These Terms & Conditions apply to all customers using the Linkaro platform. By creating an account, posting a service request, contacting a service provider, or using any feature of the platform, you agree to these Terms & Conditions. You must be at least 18 years of age to create an account or use Linkaro. By using the platform, you confirm that you meet this age requirement.",
   },
   {
     title: "2. About Linkaro",
@@ -60,7 +60,7 @@ const consumerSections = [
 const providerSections = [
   {
     title: "1. Acceptance of Terms",
-    body: "By registering as a service provider on Linkaro, you agree to comply with these Terms & Conditions. If you do not agree, you must not create or use a service provider account.",
+    body: "By registering as a service provider on Linkaro, you agree to comply with these Terms & Conditions. If you do not agree, you must not create or use a service provider account. You must be at least 18 years of age to register as a service provider. By registering, you confirm that you meet this age requirement.",
   },
   {
     title: "2. Independent Service Provider Status",
