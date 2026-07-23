@@ -119,7 +119,7 @@ const additionalPolicies = [
       { title: "Honest Representation", body: "Users must maintain accurate profiles and must not impersonate another individual or business, misrepresent their skills, identity, qualifications, or intentions, or use another person's account." },
       { title: "Safe Interactions", body: "We encourage users to communicate through the Platform where possible, verify details before meeting in person, and choose safe, appropriate settings for service delivery. Exercise personal judgment when meeting strangers." },
       { title: "Prohibited Behaviour", body: "The following are strictly prohibited:\n\n• Threats of violence or intimidation toward any user.\n• Scams, fraud, or deceptive practices of any kind.\n• Soliciting or offering illegal services.\n• Spamming or sending unsolicited commercial messages.\n• Sharing another user's personal information without their consent.\n• Any conduct that endangers the safety of another user." },
-      { title: "Reporting Violations", body: "Users can report violations through the in-app reporting tool or by contacting support at info@linkaroapp.com. Reports are reviewed in accordance with our Trust & Safety Policy." },
+      { title: "Reporting & Blocking", body: "Users can report violations through the in-app flag button available in every chat, or by contacting support at info@linkaroapp.com. Users can also block any other user directly from the chat screen — blocked users cannot send messages to the user who blocked them. Reports are reviewed in accordance with our Trust & Safety Policy." },
       { title: "Consequences", body: "Violations of these Guidelines may result in a warning, content removal, temporary suspension, or permanent removal from the Platform, at Linkaro's sole discretion." },
       { title: "Contact Us", body: "For questions, please contact us at info@linkaroapp.com." },
     ],
@@ -130,7 +130,7 @@ const additionalPolicies = [
     sections: [
       { title: "Our Commitment", body: "Linkaro is committed to fostering a safe environment for Customers and Service Providers. This Policy describes the trust and safety measures we apply and the shared responsibilities of our users." },
       { title: "Identity Verification", body: "We apply identity and credential verification to Service Providers through our KYC process. Verification confirms identity and, where relevant, professional credentials. It does not guarantee any particular conduct." },
-      { title: "Reporting Unsafe Behaviour", body: "Users can report unsafe, threatening, or inappropriate behaviour through the in-app reporting feature or by emailing info@linkaroapp.com. Reports are treated with confidentiality and reviewed promptly." },
+      { title: "Reporting & Blocking", body: "Users can report unsafe, threatening, or inappropriate behaviour through the in-app flag button available in every chat, or by emailing info@linkaroapp.com. Users can also block any other user from the chat screen — blocked users cannot send messages to the blocker. Reports are treated with confidentiality and reviewed promptly." },
       { title: "Emergency Situations", body: "In an emergency, contact local emergency services directly (Police: 15; Rescue: 1122 in Pakistan). Linkaro is not equipped to respond to real-time emergencies." },
       { title: "Account Review Process", body: "Reports involving safety concerns are prioritised for review. We may temporarily suspend an account pending investigation and will communicate the outcome to all affected parties where appropriate." },
       { title: "Cooperation with Law Enforcement", body: "Linkaro cooperates with law enforcement authorities in accordance with applicable law and our Law Enforcement Request Policy." },
@@ -318,8 +318,6 @@ const additionalPolicies = [
 // ── Components ───────────────────────────────────────────────────────────────
 
 function PolicySection({ section }) {
-  const bodyLines = section.body.split("\n");
-
   return (
     <div
       id={section.id}
